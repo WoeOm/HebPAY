@@ -1,0 +1,13 @@
+jdbc.driverClassName=McecyzGxnEzO8bCFMU+ZiHQB1ZFkjYej0eoCN9m/Tp8\=
+jdbc.username=q4VCnD7UYdqgIImGXilSYQ\=\=
+jdbc.password=C49rPSP9e0z3WbDnxpQWdQ\=\=
+##Finance
+##jdbc.url=lTUJiNzIi/lMrpQqdRu0KbeHlSNu6ZAp7qTEgbZZ2Dx2KVtuWWudkdIDw/te4umg
+##Company
+jdbc.url=lTUJiNzIi/lMrpQqdRu0KR/4CwIHV9eiUgoJvGb9vaFwbS5LezaKQsyHlrnbHQjp
+
+jdbc.initialSize=5
+jdbc.maxActive=15
+jdbc.maxIdle=2
+jdbc.minIdle=1
+jdbc.maxWait=60000 

@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head >
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="${ctx}/static/css/style.css" type="text/css"/>
+    <script src="${ctx}/static/js/jquery-1.9.1.min.js"></script>
+    <style type="text/css">
+    .login_cuowu{ line-height: 18px; background-image: url("${ctx}/static/images/erro.png"); background-position: 5px center; background-repeat: no-repeat; background-color:#fceee8; border:1px solid #f6c8b5; padding: 4px 15px; margin-bottom: 8px; text-align: left; padding-left: 30px; display: none;}
+.phone_yes{ line-height: 18px; background-image: url("${ctx}/static/images/ok.png"); background-position: 5px center; background-repeat: no-repeat; background-color:#c8ffd6; border:1px solid #c8ffd6; padding: 4px 12px; margin-bottom: 8px; text-align: left; padding-left: 30px;display:none;}
+	</style>
+    <script language="javascript">
+	    window.history.forward();
+	    window.onunload = function(){window.history.forward();};
+	    window.onpageshow = function(event) {
+	        if (event.persisted) {
+	            window.location.reload();
+	        }
+	    };
+    	function showDocumentLink(){
+            if (document.getElementById("inforbox").style.display == "block")
+            {
+                document.getElementById("inforbox").style.display = "none";
+                document.getElementById("inforbtn").style.background = 'url(${ctx}/static/images/point.png)no-repeat 60px 12px';
+            }
+        else
+            {
+                document.getElementById("inforbox").style.display = "block";
+               document.getElementById("inforbtn").style.background = 'url(${ctx}/static/images/point.png)no-repeat 60px -8px';
+            }
+        }
+        function changecolor(obj){
+        	/* var bankString = $(obj).attr("name");
+        	$("#bankCode").val(bankString.split(':')[0]);
+        	$("#sign").val(bankString.split(':')[1]);
+        	$("[id=yhys]").removeClass('bankimg check');
+        	$("[id=yhys]").addClass('bankimg');
+        	$(obj).attr("class","bankimg check"); */
+        }
+    	$(document).ready(function(){
+    		$("#pay").css("background","#3498db");
+    		$("#pay").click(function(){
+    			if(!($("#isAgree").is(':checked'))){
+    				alert("请先阅读网上缴费服务协议后再缴费！");
+    				return;
+    			}
+    			if($("#bankCode").val()==""){
+    				alert("请先选择银行！");
+    				return;
+    			}
+    			$("#info").submit();
+    		});
+    		
+    		$("#amt").val(parseFloat(${amt}).toFixed(2));
+    		
+    	});
+    	
+    	
+        function checkmb(){
+           	/* var mb = document.getElementById("mb").value;
+        	if(!(/^1(3|4|5|7|8)\d{9}$/.test(mb))){
+				$("#login_cuowu").removeClass();
+				$("#login_cuowu").addClass("login_cuowu");
+     	       	$("#login_cuowu").text("手机号格式不正确");
+     	        $("#login_cuowu").css("display","block");
+     	        $("#sendyzm").attr("disabled",false);
+			    $("#sendyzm").css("background","#3498db");
+            	return false;
+            }else{
+ 	          	$("#login_cuowu").css("display","none");
+ 	        	return true;
+        	} */
+        }
+        function checkkaptcha(){
+           	/* var kaptcha = document.getElementById("kaptcha").value;
+        	if(kaptcha==""){
+     	       	$("#login_cuowu").text("验证码不能为空");
+     	        $("#login_cuowu").css("display","block");
+     	        $("#sendyzm").attr("disabled",false);
+			    $("#sendyzm").css("background","#3498db");
+            	return false;
+            }else{
+ 	          	$("#login_cuowu").css("display","none");
+ 	        	return true;
+        	} */
+        }
+        var times = 60;
+        var sh = null;
+        function sendyzma(){
+        	
+        	/* $("#sendyzm").attr("disabled","disabled");
+        	$("#sendyzm").css("background","#d0d0d0");
+        	var mb = document.getElementById("mb").value;
+        	var kaptcha = document.getElementById("kaptcha").value;
+        	if(checkmb() && checkkaptcha()){
+        		$.ajax({
+          			type: "POST",
+          			url: "${ctx}/static/sendValidate",
+          			data:{"kaptcha":kaptcha},
+          			success: function(data){
+           				if(data.code==1){
+           					sh = setInterval('buttime()',1000);	
+           					$("#login_cuowu").text("短信已发送");
+           					$("#login_cuowu").removeClass();
+           					$("#login_cuowu").addClass("phone_yes");
+           		           	$("#login_cuowu").css("display","block");
+           			    	$('#imgjy').click();
+           				}else{
+           					$("#sendyzm").attr("disabled",false);
+           			    	$("#sendyzm").css("background","#3498db");
+           					$("#login_cuowu").text(data.msg);
+           					$("#login_cuowu").removeClass();
+           					$("#login_cuowu").addClass("login_cuowu");
+           		           	$("#login_cuowu").css("display","block");
+           			    	$('#imgjy').click();
+           		            clearInterval(sh);
+           				}
+           			}
+           		});
+        	} */
+    		 
+        }
+        function buttime(){
+	    	/* $("#sendyzm").css("background","#d0d0d0");
+    		if(times==1){
+    			$("#sendyzm").val("发送验证码");
+    			$("#sendyzm").attr("disabled",false);
+    	    	$("#sendyzm").css("background","#3498db");
+    	    	times = 60;
+    			clearInterval(sh);
+    			return;
+    		}
+    		$("#sendyzm").val("重新发送("+times+")");
+    		times = times -1 ; */
+    	}
+        function chakembyam(){
+        	var mbcke =  $("#mbcke").val();
+        	var mb = document.getElementById("mb").value;
+        	if(mbcke!=""){
+        		$.ajax({
+          			type: "POST",
+          			url: "${ctx}/static/validatePhone",
+          			data:{"mbcke":mbcke,"mb":mb},
+          			success: function(data){
+           				if(data.code==1){
+           	 	        	$("#pay").attr("disabled",false);
+           				    $("#pay").css("background","#3498db");
+           				}else{
+           					$("#login_cuowu").text("请输入正确的手机验证码");
+           	     	        $("#login_cuowu").css("display","block");
+           				}
+           			}
+           		});
+        	}
+        }
+    </script>
+    
+</head>
+<body>
+<div class="payment_head">
+    <div class="head_nav">
+        <p>${merchantName}<span>支付平台</span></p>
+    </div>
+</div>
+    <div class="payment_warp">
+        <div class="head">
+            <h3>缴费订单信息</h3>
+        </div>
+        <div class="payment_infor">
+            <label for="">缴费单位：</label><span>${merchantName}</span>
+            <label for="">缴款人：</label> <span>${payerName}</span>
+            <label for="">缴费金额：</label> <span>RMB &nbsp;${amt}&nbsp;(元)</span>
+            <a href="javascript:;" id="inforbtn" onclick="showDocumentLink()">订单详情</a>
+        </div>
+        <div class="pay_list_box" style="display: block;" id="inforbox">
+            <div c3222222222222lass="pay-list-info">
+                <span class="mr10"> 订单号：${payerNum}</span><span class="mr10">姓名：${payerName}</span>
+            </div>
+            <div class="pay-list-info">
+                <span class="mr10"> 缴费类型：${payerTypeName}</span>
+            </div>
+            <div class="pay-list-info">
+                <!-- <span class="mr10">缴费地址：河北省公安厅高速公路交通警察总队高速公路交通警察总队河北省公安厅1212号</span> -->
+            </div>
+        </div>
+        
+        <div class="phone">
+            <h3>手机验证</h3>
+            <div class="tips">手机号用于缴款后回执单的接收与缴费单的查询及缴费后的各种保障</div>
+        </div>
+        <div style="height: 28px;margin-top: 4px;">
+        	<div id="login_cuowu" class="login_cuowu" style="width: 190px;margin-left:300px; "></div>
+        </div>
+					
+         <div class="pay-verify" style="margin-top: 4px;">
+        
+            <form action="">
+                <dl>
+                    <dt>手机号：</dt>
+                    <dd> <input id="mb" type="text" class="user" value="" placeholder="请输入手机号" onblur="checkmb()"></dd>
+                </dl>
+                <dl>
+                    <dt>验证码：</dt>
+                    <dd><input id="kaptcha" type="text" class="pass" value="" placeholder="请输入验证码"> <img id="imgjy" src="${ctx}/static/kaptcha" style="width:75px;height:32px; float:right;margin-left:4px; vertical-align:middle" onclick="this.src='${ctx}/static/kaptcha?id='+Math.random();"/></dd>
+                </dl>
+                <dl>
+                    <dt>校验码：</dt>
+                    <dd>
+                        <input id="mbcke" type="text" class="yanzhen" value="" placeholder="请输入手机验证码" onblur="chakembyam()"> <input id="sendyzm" type="button" value="发送验证码" class="verify"  onclick="sendyzma()"></dd>
+                </dl>
+            </form>
+        </div>
+        <div class="paybank_box">
+            <div class="head">
+                <h3>支付方式选择</h3>
+            </div>
+            <div id="bank" class="pay-tips">请确保您选择的银行卡已开通了网上支付功能，否则将无法支付成功</div>
+            	<div class="bankbox">
+            		<div class="checkbank">
+               			<div id="yhys" class="bankimg check" onclick="changecolor(this)" name="${pwl.bankType}"><img src="${ctx}/static/images/CCB-BANK.png" width="127" height="40" /></div>
+           			</div>
+            	</div>
+            	<!-- <#list bankInfo as pwl>
+	            	<#if (pwl_index%4) == 0>
+	                	<div class="bankbox">
+					</#if>
+					<#if pwl.bankCode == 'CCB-BANK'>
+				        <div class="checkbank">
+                  			<div id="yhys" class="bankimg check" onclick="changecolor(this)" name="${pwl.bankType}"><img src="${ctx}/static/images/${pwl.bankCode}.png" width="127" height="40" ></div>
+              			</div>
+              		</#if>
+              		<#if (pwl_index%4) == 3 || pwl_index == (bankInfo?size-1)>
+	                	</div>
+					</#if>
+				</#list> -->
+				
+	            <div class="check_box"><input id="isAgree" type="checkbox" class="check" checked/>我已阅读相关协议<a href="#">《网上缴费服务协议》</a></div>
+	            <input id="pay" type="button" class="paybtn" value="去支付" />
+         	</div>
+    </div>
+    <form id="info" method="post" action="payBank" >
+    	<input id="amt" name="amt" type="hidden" value=""/>
+    	<input id="busiTypeCode" name="busiTypeCode" type="hidden" value="${busiTypeCode}"/>
+        <#list bankInfo as pwl>
+	    	<#if pwl.bankCode == 'CCB-BANK'>
+	    		<#list pwl.bankType?split(':') as name>
+	    		<#if name_index==0>
+	    			<input id="bankCode" name="payWay" type="hidden" value="${name}" /> 
+	    		</#if>
+	    		<#if name_index==1>
+					<input id="sign" name="sign" value="${name}" type="hidden" />
+				</#if>
+				</#list>
+	    	</#if>
+    	</#list>
+	<input id="payerNum" name="payerNum" value="${payerNum}" type="hidden" />
+	<input id="payKey" name="payKey" type="hidden" value="${payKey}"/> 
+	<input id="signType" name="signType" type="hidden" value="MD5"/> 
+	<input id="payerTypeCode" name="payerTypeCode" type="hidden" value="${payerTypeCode}"/>
+    </form>
+<div class="footer">
+    <p> Copyright2016  河北省财政厅  All Rights Reserved  </p>
+    <p>冀ICP备05070602号    邮箱：support@hebei.gov.cn</p>
+</div>
+</body>
+</html>

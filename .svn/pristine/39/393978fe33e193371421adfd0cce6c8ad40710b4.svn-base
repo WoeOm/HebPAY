@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head >
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="${ctx}/static/css/style.css" type="text/css"/>
+    <script src="${ctx}/static/js/jquery-1.9.1.min.js"></script>
+
+</head>
+<body>
+<div class="payment_head">
+    <div class="head_nav">
+        <p>${merchantName}<span>支付平台</span></p>
+    </div>
+</div>
+    <div class="payok_warp">
+        <h3>支付结果</h3>
+        <div class="ok_main">
+            <h2>恭喜您，支付成功！</h2>
+            <div class="infor">
+                <p><span>订 单 号 ：</span>${payerNum}</p>
+                <p><span>缴费金额：</span>${amt}元</p>
+                <p><span>缴费类型：</span>${payerTypeCode}</p>
+            </div>
+        </div>
+    </div>
+<div class="footer" style="position: fixed;bottom: 0;">
+    <p> Copyright2016  河北省财政厅  All Rights Reserved  </p>
+    <p>冀ICP备05070602号    邮箱：support@hebei.gov.cn</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title></title>
+
+</head>
+<body>
+<form id="info" method="post">
+
+</form>
+<script type="text/javascript">
+document.getElementById("info").action = '${url}';
+document.getElementById("info").submit();
+
+</script>
+</body>
+</html>
+

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="heb.pay.dao.AutoScanDao">
+	
+	<select id="getAutoJob" resultType="java.lang.Integer">
+		select count(1) from hp_qrtz_job_details t where t.job_name = #{0} and t.job_group = #{1} 
+	</select>
+ 
+	<select id="getAutoScan" resultType="java.lang.String" parameterType="java.lang.String">
+		select b.bank_order_no from HP_TRADE_PAYMENT_ORDER a,HP_TRADE_PAYMENT_RECORD b where a.trx_no = b.trx_no and a.order_expire_time &gt; sysdate and a.order_time &lt; sysdate and a.status = #{status} 
+	</select>
+	
+</mapper>

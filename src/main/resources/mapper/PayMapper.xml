@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="heb.pay.dao.PayDAO">
+	
+	<!-- 获取paySecret值 -->
+	<select id="getSecretKey" resultType="java.lang.String" parameterType="java.lang.String">
+		select PAY_SECRET from HP_MERCHANT_PAY_CONFIG where pay_key = #{payKey}
+	</select>
+	
+	<!-- 插入订单表 -->
+	<insert id="insertPaymentOrder" parameterType="heb.pay.entity.MerchantInfo">
+		insert into hp_trade_payment_order(id,version,product_name,merchant_no,merchant_name,merchant_order_no,order_amount,order_time,order_date,
+			order_period,order_expire_time,return_url,notify_url,order_ip,order_referer_url,
+			status,creator,create_time,modificator,modify_time,field1,field2,field3,busi_type_code) values 
+			(#{id},#{version},#{product_name},#{merchant_no},#{merchant_name},#{merchant_order_no},#{order_amount},#{order_time},
+			 #{order_date},#{order_period},#{order_expire_time},#{return_url},#{notify_url},
+			 #{order_ip},#{order_referer_url},#{status},#{creator},#{create_time},#{modificator},#{modify_time},
+			 #{field1},#{field2},#{field3},#{busi_type_code})
+	</insert>
+	
+	<!-- 根据订单号判断是否存在 getPaymentOrderByOrderNum -->
+	<select id="getPaymentOrderByOrderNum" resultType="heb.pay.entity.PaymentOrder">
+		select * from HP_TRADE_PAYMENT_ORDER where merchant_order_no = #{0} and merchant_no = #{1} and product_name=#{2} and busi_type_code = #{3} and order_amount=#{4}
+	</select>
+	
+	<!-- 根据payKey获取商户信息 -->
+	<select id="getMerchantInfo" resultType="heb.pay.entity.MerchantInfo" parameterType="java.lang.String">
+		select * from hp_merchant_info where user_no = (select user_no from hp_merchant_pay_config where pay_key = #{payKey} )
+	</select>
+	
+	<!-- 获取可用银行列表 -->
+	<select id="getPayWayList" resultType="heb.pay.entity.PayWay" parameterType="java.lang.String">
+		select * from hp_pay_way where status = 1 and pay_product_code in(select t2.product_code from hp_merchant_info t,hp_merchant_pay_config t1,hp_pay_product t2 where t.user_no=t1.user_no and t1.product_code=t2.product_code and t.status=1 and t1.status=1 and t2.status=1 and t1.pay_key = #{payKey} ) order by pay_order	
+	</select>
+	
+	<!-- 获取订单列表 -->
+	<select id="getOrderSingleByOrderNum" resultType="heb.pay.entity.PaymentOrder" parameterType="java.util.Map">
+		<choose>
+			<when test="payerNum != null and payerNum != ''">
+				select t.* from hp_trade_payment_order t,hp_trade_payment_record t1 where t.trx_no=t1.trx_no and t1.bank_order_no= #{payerNum}
+			</when>
+			<otherwise>
+				select * from(select rownum rs,t.* from (select * from HP_TRADE_PAYMENT_ORDER where product_name = #{payerTypeCode} and MERCHANT_NO = #{merchantNo} and busi_type_code=#{busiTypeCode} 
+				<if test="startDate != null and startDate != ''">
+					and order_time &gt;= startDate 
+				</if>
+				<if test="endDate != null and endDate != ''">
+					and order_time &lt;= endDate 
+				</if>
+					order by order_time) t) where 1=1
+				<if test="pageIndex != null ">
+					and rs &gt;= ((#{pageIndex} -1) * 1000 +1) and rs &lt; ((#{pageIndex}) * 1000 + 1)
+				</if>
+				<if test="pageIndex == null ">
+					and rs &gt;= 1 and rs &lt; 1001
+				</if>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 获取总行号 -->
+	<select id="getOrderCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		select count(1) from HP_TRADE_PAYMENT_ORDER a1 where product_name = #{payerTypeCode} and MERCHANT_NO = #{merchantNo} and busi_type_code=#{busiTypeCode} 
+		<if test="startDate != null and startDate != ''">
+			and order_time &gt;= startDate 
+		</if>
+		<if test="endDate != null and endDate != ''">
+			and order_time &lt;= endDate 
+		</if>
+	</select>
+	
+	<!-- updateOrderByOrderId -->
+	<update id="updateOrderByOrderId">
+		update HP_TRADE_PAYMENT_ORDER set status = #{1},modify_time=sysdate where trx_no = (select trx_no from hp_trade_payment_record where bank_order_no=#{0})
+	</update>
+	
+	<!-- updateOrderByOrderId -->
+	<update id="updateRecordByOrderId">
+		update hp_trade_payment_record set status = #{1},pay_success_time=sysdate where bank_order_no = #{0}
+	</update>
+	
+	<!-- getReturnURLByOrderNum -->
+	<select id="getReturnURLByOrderNum" resultType="java.lang.String" parameterType="java.lang.String">
+		select return_url from HP_TRADE_PAYMENT_ORDER where merchant_no = #{0} and merchant_order_no = #{1}
+	</select>
+	
+	<!-- notifyURLByOrderNum -->
+	<select id="getNotifyURLByOrderNum" resultType="java.lang.String">
+		select t.notify_url from HP_TRADE_PAYMENT_ORDER t,HP_MERCHANT_PAY_CONFIG t1 where t.merchant_no=t1.user_no and t1.pay_Key= #{0} and t.merchant_order_no= #{1}
+	</select>
+	
+	<!-- getPayWayByCode -->
+	<select id="getPayWayByCode" resultType="heb.pay.entity.PayWay">
+		select * from HP_PAY_WAY where pay_way_code = #{0} and pay_type_code = #{1}
+	</select>
+
+	
+	<!-- 判断商户是否存在并且有效 checkMerchant-->
+	<select id="checkMerchant" resultType="heb.pay.entity.MerchantInfo" parameterType="java.lang.String">
+		select * from hp_merchant_info where user_no = (select user_no from hp_merchant_pay_config where pay_key = #{payKey})
+	</select>
+	<!-- getMerchantPayInfo -->
+	<select id="getMerchantPayInfo" resultType="heb.pay.entity.MerchantPayInfo">
+		select * from  HP_MERCHANT_PAY_INFO where user_no =#{0}  and pay_way_code=#{1} and status=1
+	</select>
+	
+	<!-- getMerPayInfoByPostid -->
+	<select id="getMerPayInfoByPostid" resultType="heb.pay.entity.MerchantPayInfo">
+		select * from  HP_MERCHANT_PAY_INFO where TG_MERCHANT_ID2 =#{0}  and TG_MERCHANT_ID3=#{1} and status=1
+	</select>
+	
+	<!-- getPayOrderByOrderId -->
+	<select id="getPayOrderByOrderId" resultType="heb.pay.entity.PaymentOrder" parameterType="java.lang.String">
+		select * from hp_trade_payment_order where trx_no = (select trx_no from hp_trade_payment_record where bank_order_no=#{orderId})
+	</select>
+	
+	<!-- getMerPayConfig -->
+	<select id="getMerPayConfig" resultType="heb.pay.entity.MerchantPayConfig">
+		select * from hp_merchant_pay_config where user_no = #{0} and product_code = #{1}
+	</select>
+	
+	<!-- getCount -->
+	<select id="getCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		select count(1) from hp_notify_record where merchant_no = #{user_no} and merchant_order_no = #{payerNum}
+	</select>
+	<!-- getMaxTimes -->
+	<select id="getMaxTimes" resultType="java.lang.Integer" parameterType="java.lang.String">
+		select distinct limit_notify_times from HP_NOTIFY_RECORD where merchant_order_no=#{1} and merchant_no=#{0}
+	</select>
+	
+	<!-- getMaxTimes -->
+	<select id="getCurTimes" resultType="java.lang.Integer" parameterType="java.lang.String">
+		select max(nvl(notify_time,1)) notify_time from HP_NOTIFY_RECORD where merchant_order_no=#{1} and merchant_no=#{0}
+	</select>
+	
+	<!-- insertNotifyRecord -->
+	<insert id="insertNotifyRecord">
+		insert into HP_NOTIFY_RECORD(id,create_time,notify_time,Limit_Notify_Times,Url,Merchant_Order_No,Merchant_No,Status)
+		values(sys_guid(),sysdate,#{0},#{1},#{2},#{3},#{4},#{5})
+	</insert>
+	
+	<!-- getPayerType -->
+	<select id="getPayerType" resultType="heb.pay.entity.PayerType" parameterType="java.lang.String">
+		select * from t_jfpayerType where payerTypeCode = #{productName} and isenable=1
+	</select>
+	
+</mapper>

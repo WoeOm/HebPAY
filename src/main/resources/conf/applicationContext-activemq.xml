@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xmlns:amq="http://activemq.apache.org/schema/core"
+	xsi:schemaLocation="http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-4.3.xsd
+		http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.8.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+			
+	<amq:connectionFactory id="jmsConnectionFactory" brokerURL="${activemq.ip}" userName="${activemq.username}" password="${activemq.password}" />
+	
+	<bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+		<constructor-arg ref="jmsConnectionFactory" />
+		<property name="sessionCacheSize" value="100" />
+	</bean>
+	
+	<bean id="jmsMessageConverter" class="org.springframework.jms.support.converter.SimpleMessageConverter" />
+
+	<bean id="jmsQueueTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="pubSubDomain" value="false" />
+		<property name="messageConverter" ref="jmsMessageConverter"></property>
+	</bean>
+	
+	<bean id="queueSender" class="heb.pay.manage.activemq.QueueSender">
+		<property name="jmsQueueTemplate" ref="jmsQueueTemplate"></property>
+	</bean>
+	
+	<bean id="queueReciver" class="heb.pay.manage.activemq.QueueReciver"></bean>
+	
+	<jms:listener-container destination-type="queue" container-type="default" connection-factory="connectionFactory" acknowledge="auto" >
+		<jms:listener destination="${activemq.destination}" ref="queueReciver" />
+	</jms:listener-container>  
+</beans>

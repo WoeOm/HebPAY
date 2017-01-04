@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="heb.pay.dao.PaymentDAO">
+	
+	<!-- updateOrderTrxNO -->
+	<update id="updateOrderTrxNO" parameterType="java.util.Map">
+		update HP_TRADE_PAYMENT_ORDER set trx_no = #{trxNO},pay_way_code=#{payWayCode},pay_way_name=#{payWayName},pay_type_code=#{payTypeCode},pay_type_name=#{payTypeName},status=#{status} where merchant_order_no = #{payerNum}
+	</update>
+	
+	<!-- insertPaymentRecord -->
+	<insert id="insertPaymentRecord" parameterType="java.util.Map">
+		insert into hp_trade_payment_record(id,version,creator,create_time,status,product_name,merchant_order_no,trx_no,bank_order_no,merchant_name,merchant_no,pay_way_code,pay_way_name,order_amont,return_url,notify_url,pay_type_code,pay_type_name)
+		values(#{uuid},#{version},#{creator},sysdate,#{status},#{productName},#{payerNum},#{trxNO},#{bankOrderNo},#{merchantName},#{merchantNo},#{payWayCode},#{payWayName},#{amt},#{returnURL},#{notifyURL},#{payTypeCode},#{payTypeName})
+	</insert>
+	
+</mapper>

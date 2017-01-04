@@ -1,0 +1,75 @@
+@charset "utf-8";
+/* CSS Document */
+/*全局控制*/
+body{ padding:0; margin:0; font-size:14px; font-family:"Microsoft Yahei" ,"Arial" ; }
+/*重置浏览器设置*/
+h1,h2,h3,h4,ul,ol,li,dl,dt,dd,input,img,p,textarea{ margin:0; padding:0; list-style:none; border:0;}
+a{color: #666; text-decoration: none;}
+.mr10{ margin-right: 10px;}
+.footer{ width: 100%; height: 60px; line-height: 24px; text-align: center; color: #666; background: #efefef; padding-top: 20px;}
+/*登支付页面*/
+.payment_head{ width: 100%; height: 126px; background: #75cbc2;}
+.head_nav{ width:820px; height: 126px; line-height: 126px; background: url("../../static/images/toppic.png")no-repeat 5px center; padding-left: 180px; margin: 0 auto; color: #fff;}
+.head_nav p{ font-size: 24px;}
+.head_nav p span{ font-size:18px; margin-left: 10px;}
+.payment_warp{ width: 1000px; overflow: hidden; margin: 0 auto;min-height: 560px;}
+.payment_warp .head{ height: 40px; line-height: 39px;border-bottom: 1px solid #ddd; padding-right: 10px;}
+.payment_warp .head h3{ display: inline-block; font-weight: normal; color: #000633; border-bottom: 2px solid #3399cc; font-size: 18px;float: left;}
+.payment_infor{ overflow: hidden; line-height: 32px; margin-bottom: 10px;color: #333; border-bottom: 1px dashed #ddd;}
+.payment_in{ overflow: hidden; line-height: 24px;}
+.payment_infor label,.payment_in label{ margin-right:5px;}
+.payment_infor span,.payment_in span{ margin-right:30px; color: #888 }
+.payment_infor a{ display:inline-block; padding-right: 15px;color: #09c;background: url(../../static/images/point.png) 60px -8px no-repeat; float: right;}
+.pay_list_box{ overflow: hidden; color: #999; line-height: 24px; margin-bottom: 10px;}
+.phone h3{ font-size: 14px; font-weight: bold; padding-left: 10px; color: #333; margin-bottom: 10px;}
+.phone .tips{ width:958px; line-height: 30px; background-image:url("../../static/images/tips.png");background-color: #dff1f8; background-position: 10px center; background-repeat: no-repeat; padding-left: 40px; border: 1px solid #b4e1f3;}
+.pay-verify{ overflow: hidden; margin-top: 10px; padding-left: 300px;}
+.pay-verify dl{ overflow: hidden;line-height: 30px; margin-bottom: 10px;}
+.pay-verify dl dt{ float: left;}
+.pay-verify dl dd{ float: left;}
+.pay-verify dl input{ height: 30px; line-height: 30px; border: 1px solid #ddd; padding: 0 4px; font-family: "Microsoft Yahei"; border-radius: 2px;}
+.pay-verify dl img{ vertical-align: middle; cursor: pointer;}
+.pay-verify  .verify{ background: #3498db; color: #fff; padding:0 10px; border: none; cursor: pointer;}
+.pay-tips{width:960px; line-height: 30px; background-image:url("../../static/images/tips-icon.png");background-color: #fffee6; background-position: 10px center; background-repeat: no-repeat; padding-left: 40px; color: #ff8c2e;}
+.bankbox{width:880px; overflow:hidden;margin: 0 auto; padding: 10px 60px;}
+.checkbank{ width:194px; overflow:hidden; float:left; padding: 10px 13px 15px; cursor:pointer}
+.bankimg{ text-align:center; padding:0 10px; border:1px solid #ddd;}
+.bankimg:hover{ border:1px solid #ff8800;}
+.bankimg{ text-align:center; padding:0 10px; border:3px solid #ddd;}
+.bankimg:hover{ border:3px solid #ff8800;}
+.checkbank .check{border: 3px solid #3398cc;}
+.check_box{ height: 24px; line-height: 24px; padding-left: 10px;}
+.check_box input{ vertical-align: middle; margin-right: 5px; margin-bottom: 3px;}
+.check_box a{ color: #09c;}
+.paybank_box .paybtn{ width: 150px; height: 30px; line-height: 30px; color: #fff; text-align: center; background: #d0d0d0;  font-family: "Microsoft Yahei" , "Arial"; border-radius: 2px; margin:5px 0px 10px 10px; cursor: pointer;}
+/*支付成功页面*/
+.payok_warp{ width: 1000px; overflow: hidden; margin: 0 auto;}
+.payok_warp h3{ height: 40px;line-height: 40px; font-size: 18px; font-weight: normal; color: #000633;}
+.ok_main{ width: 1000px;margin: 0 auto;min-height: 350px; background: #f3fded; border-top: 2px solid #a4d18a; margin-bottom: 40px; padding-top: 60px;}
+.ok_main h2{ color: #4fc25a;font-size: 30px; font-weight: normal; background: url("../../static/images/payok.png") no-repeat 320px center; height: 48px; line-height: 48px; padding-left: 388px;}
+.ok_main p{ color: #666;}
+.ok_main p span{ color: #333;}
+.ok_main p a{ color: #09c; margin: 0px 5px;}
+.ok_main .infor{padding-left: 390px;line-height: 24px; margin: 10px 0px;}
+.color999{ color: #999;}
+/*支付失败页面*/
+.payok_warp{ width: 1000px; overflow: hidden; margin: 0 auto;}
+.payok_warp h3{ height: 40px;line-height: 40px; font-size: 18px; font-weight: normal; color: #000633;}
+.defeat_main{ width: 1000px;margin: 0 auto;min-height: 350px; background: #fef4eb; border-top: 2px solid #f6c8b5; margin-bottom: 40px; padding-top: 60px;}
+.defeat_main h2{ color: #333333;font-size: 30px; font-weight: normal; background: url("../../static/images/payerror.png") no-repeat 320px center; height: 48px; line-height: 48px; padding-left:388px;}
+.defeat_main .infor{padding-left: 390px;line-height: 24px; margin: 10px 0px;}
+.defeat_main p{ color: #666;}
+.defeat_main p span{ color: #333;}
+.defeat_main p a{ color: #09c; margin: 0px 5px;}
+/*请求路径不安全页面*/
+.payok_warp{ width: 1000px; overflow: hidden; margin: 0 auto;}
+.payok_warp h3{ height: 40px;line-height: 40px; font-size: 18px; font-weight: normal; color: #000633;}
+.safe_main{ width: 1000px;margin: 0 auto;min-height: 200px; background: #fffae8; border-top: 2px solid #fac833; margin-bottom: 40px; padding-top: 100px;}
+.safe_main h2{ color: #333333;font-size: 40px; font-weight: normal;  background: url("../../static/images/paysafe.png") no-repeat 320px center; height: 48px; line-height: 48px; padding-left: 388px;}
+.safe_main .infor{padding-left: 390px;line-height: 24px; margin: 10px 0px;}
+.safe_main p{ color: #666;}
+.safe_main p span{ color: #333;}
+.safe_main p a{ color: #09c; margin: 0px 5px;}
+.payment_head_safe{ width: 100%; height: 126px; background: #75cbc2;}
+.payment_head_safe .head_nav{ width:800px; height: 126px;line-height: 126px; background: url("../../static/images/toppic.png")no-repeat 5px center; padding-left: 180px; margin: 0 auto; color: #fff;}
+.payment_head_safe .head_nav p{ font-size: 40px;margin-left: 100px;}
