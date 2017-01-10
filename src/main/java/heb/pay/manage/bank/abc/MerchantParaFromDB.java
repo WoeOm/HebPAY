@@ -57,11 +57,11 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			para.setTrustPayServerPortLine("443");
 
 			//#网上支付平台交易网址
-			para.setTrustPayTrxURL("/ReceiveMerchantTrxReqServlet");
+			para.setTrustPayTrxURL("/ebus/ReceiveMerchantTrxReqServlet");
 			para.setTrustPayTrxIEURL("https://pay.abchina.com/ebus/ReceiveMerchantIERequestServlet");
 						
 			//#页面提交支付请求失败后的转向地址
-			para.setMerchantErrorURL("http://127.0.0.1:8080/ebusnewupdate/Merchant.html");
+			para.setMerchantErrorURL("http://127.0.0.1:8088/ABC/Merchant.html");
 							
 			//##网上支付平台系统配置段 - 生产环境 - 更改证书存放路径，使其和本地存放路径相匹配（绝对路径）
 			//#网上支付平台证书
@@ -91,21 +91,23 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			para.setMerchantCertPasswordList(iMerchantPasswordList);
 
 			//#交易日志文件存放目录
-			para.setLogPath(CheckBankDataUtils.getABCCertPath()+"logs");
+			para.setLogPath("./logs");
 			//#证书储存媒体
 			para.setMerchantKeyStoreType("0");
 			
 			//一般商户都选用文件证书
-      if (para.getMerchantKeyStoreType().equals(MerchantPara.KEY_STORE_TYPE_FILE)) {
-          CertHelper.bindMerchantCertificate(para, iMerchantCertList, iMerchantPasswordList);
-      }
-      else if (para.getMerchantKeyStoreType().equals(MerchantPara.KEY_STORE_TYPE_SIGN_SERVER)) {
-      }
-      else {
-          throw new TrxException(TrxException.TRX_EXC_CODE_1001, TrxException.TRX_EXC_MSG_1001 + " - 证书储存媒体配置错误！");
-      }
-		    
-      //#Sign Server地址（当KeyStoreType=1时，必须设定）
+			if (para.getMerchantKeyStoreType().equals(MerchantPara.KEY_STORE_TYPE_FILE)) {
+				CertHelper.bindMerchantCertificate(para, iMerchantCertList, iMerchantPasswordList);
+			}else if (para.getMerchantKeyStoreType().equals(MerchantPara.KEY_STORE_TYPE_SIGN_SERVER)) {
+			}else {
+				throw new TrxException(TrxException.TRX_EXC_CODE_1001, TrxException.TRX_EXC_MSG_1001 + " - 证书储存媒体配置错误！");
+			}
+			//设定上网代理
+			para.setProxyIP("");
+			para.setProxyPort("");
+			//设定连接超时时间
+			para.setTrustPayServerTimeout(""); 
+			//#Sign Server地址（当KeyStoreType=1时，必须设定）
 			//para.setSignServerIP("");
 			//#Sign Server端口（当KeyStoreType=1时，必须设定）
 			//para.setSignServerPort("");

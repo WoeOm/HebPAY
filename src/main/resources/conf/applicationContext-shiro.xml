@@ -31,10 +31,12 @@
         <property name="filterChainDefinitions">
             <value>
             	/static/** = anon
+            	
             	/paynotify/notify/** = anon
             	/paynotify/return/** = anon
             	/payment/sendvalicode = anon
             	/payment/isvalicode = anon
+            	
                 /** = stateless
             </value>
         </property>

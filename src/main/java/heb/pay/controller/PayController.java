@@ -48,6 +48,7 @@ public class PayController {
 	
 	private final String xmlHeader = "<?xml version='1.0' encoding='utf-8'?>";
 	
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/pay/inpay")
 	public ModelAndView doPayIn(HttpServletRequest request,HttpServletResponse response, ModelAndView model){
 		//获取参数信息
@@ -71,25 +72,30 @@ public class PayController {
 		//验证数据
 		Map<String,Object> retMap = payOpService.checkBaseInfo(payKey, productName, amt);
 		if(retMap.containsKey("error")){
-			int ckRet = Integer.parseInt(retMap.get("error").toString());
-			switch (ckRet) {
-			case -1:
-				model.addObject("errorCode", "ERROR1569875421001");
+			String error = retMap.get("error").toString();
+			switch (error) {
+			case "no_user":
+				model.addObject("errorCode", "1401");
 				model.addObject("errorInfo", "用户不存在！");
 				model.setViewName("payment_defeat");
 				break;
-			case -2:
-				model.addObject("errorCode", "ERROR78984710025");
+			case "no_unit":
+				model.addObject("errorCode", "1402");
+				model.addObject("errorInfo", "用户不存在！");
+				model.setViewName("payment_defeat");
+				break;
+			case "no_paytype":
+				model.addObject("errorCode", "1403");
 				model.addObject("errorInfo", "该用户下没有该缴费类型！");
 				model.setViewName("payment_defeat");
 				break;
-			case -3:
-				model.addObject("errorCode", "ERROR73901038718");
+			case "out_pay":
+				model.addObject("errorCode", "1404");
 				model.addObject("errorInfo", "超出限额！");
 				model.setViewName("payment_defeat");
 				break;
-			case -4:
-				model.addObject("errorCode", "ERROR78984710025");
+			case "no_pay":
+				model.addObject("errorCode", "1405");
 				model.addObject("errorInfo", "该用户下没有可用支付方式！");
 				model.setViewName("payment_defeat");
 				break;
@@ -110,27 +116,27 @@ public class PayController {
 		Date curDate = null;
 		if(orderList != null && orderList.size()>0){
 			//如果订单已经支付，则跳转到错误页面，提示已经支付成功不可以再支付
-//			if(orderList.get(0).getStatus().equals("SUCCESS")){
-//				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
-//				model.addObject("errorInfo", "当前订单已支付成功，无需重复支付，请查看你的交易记录确认！");
-//				model.setViewName("payment_defeat");
-//				return model;
-//			}
-//			if(orderList.get(0).getStatus().equals("WAITING_PAYMENT")){
-//				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
-//				model.addObject("errorInfo", "订单正在支付中，请等待支付完成！");
-//				model.setViewName("payment_defeat");
-//				return model;
-//			}
-//			//判断订单是否超时
-//			Date dateDB = orderList.get(0).getOrder_expire_time();
-//			curDate = new Date();
-//			if((curDate.getTime()-dateDB.getTime())>=0){
-//				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
-//				model.addObject("errorInfo", "此订单已过期，请重新生成订单再支付！");
-//				model.setViewName("payment_defeat");
-//				return model;
-//			}
+			if(orderList.get(0).getStatus().equals("SUCCESS")){
+				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
+				model.addObject("errorInfo", "当前订单已支付成功，无需重复支付，请查看你的交易记录确认！");
+				model.setViewName("payment_defeat");
+				return model;
+			}
+			if(orderList.get(0).getStatus().equals("WAITING_PAYMENT")){
+				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
+				model.addObject("errorInfo", "订单正在支付中，请等待支付完成！");
+				model.setViewName("payment_defeat");
+				return model;
+			}
+			//判断订单是否超时
+			Date dateDB = orderList.get(0).getOrder_expire_time();
+			curDate = new Date();
+			if((curDate.getTime()-dateDB.getTime())>=0){
+				model.addObject("errorCode", "ERROR-ORDER"+orderList.get(0).getMerchant_order_no());
+				model.addObject("errorInfo", "此订单已过期，请重新生成订单再支付！");
+				model.setViewName("payment_defeat");
+				return model;
+			}
 		}else{
 			//如果订单不存在，则生成订单信息，并保存至订单表
 			PaymentOrder paymentOrder = new PaymentOrder();

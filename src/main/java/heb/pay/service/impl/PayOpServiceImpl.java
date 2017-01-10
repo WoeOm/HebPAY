@@ -45,7 +45,7 @@ public class PayOpServiceImpl implements PayOpService {
 		//获取支付平台单位信息
 		List<MerchantInfo> merchantList = payService.checkMerchant(payKey);
 		if(merchantList == null || merchantList.size()<=0){
-			map.put("error", -1);
+			map.put("error", "no_user");
 			return map;
 		}
 		map.put("merchantInfo", merchantList.get(0));
@@ -53,21 +53,21 @@ public class PayOpServiceImpl implements PayOpService {
 		//获取单位信息
 		List<BaseUnit> unitList = jfPayService.getBaseUnit(userNO);
 		if(unitList == null || unitList.size()<=0){
-			map.put("error", -1);
+			map.put("error", "no_unit");
 			return map;
 		}
 		map.put("baseUnit",unitList.get(0));
 		//获取缴费类型信息
 		List<PayerType> payTypeList = jfPayService.getPayerType(payerTypecode);
 		if(payTypeList == null || payTypeList.size()<=0){
-			map.put("error", -1);
+			map.put("error", "no_paytype");
 			return map;
 		}
 		//判断是否属于限额缴费类型
 		if(payTypeList.get(0).getIslimitamt()>0){
 			double limitAmt = jfPayService.getLimitAmt(payTypeList.get(0).getPayertypeid(),unitList.get(0).getUnitid());
 			if(amt>limitAmt){
-				map.put("error", -1);
+				map.put("error", "out_pay");
 				return map;
 			}
 		}
@@ -75,7 +75,7 @@ public class PayOpServiceImpl implements PayOpService {
 		//验证银行信息
 		List<PayWay> payWayList = payService.getPayWayList(payKey);
 		if(payWayList == null || payWayList.size()<=0){
-			map.put("error", -1);
+			map.put("error", "no_pay");
 			return map;
 		}
 		map.put("payWayList",payWayList);
@@ -89,19 +89,19 @@ public class PayOpServiceImpl implements PayOpService {
 		Map<String, Object> map = new HashMap<String, Object>();
 		if(orderList != null && orderList.size()>0){
 			if(orderList.get(0).getStatus().equals("SUCCESS")){
-				map.put("error", -1);
+				map.put("error", "payed");
 				return map;
 			}else if(orderList.get(0).getStatus().equals("WAITING_PAYMENT")){
-				map.put("error", -2);
+				map.put("error", "paying");
 				return map;
 			}else if(orderList.get(0).getStatus().equals("FAILED")){
-				map.put("error", -3);
+				map.put("error", "pay_fail");
 				return map;
 			}
 			Date curDate = new Date();
 			Date dateDB = orderList.get(0).getOrder_expire_time();
 			if((curDate.getTime()-dateDB.getTime())>=0){
-				map.put("error", -4);
+				map.put("error", "pay_out");
 				return map;
 			}
 			map.put("isExist","1");

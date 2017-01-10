@@ -37,7 +37,7 @@ public class StatelessFilter extends AccessControlFilter {
 		
 		AuthenticationToken token = null;
 		String url = ((HttpServletRequest)request).getRequestURI();
-		if(url.indexOf("inpay")>=0){
+		if(url.indexOf("inpay")>=0){//进入支付选择页面
 			String payerName = treeMap.get("payerName");
 			String payerIdNum = treeMap.get("payerIdNum");
 			String payerNum = treeMap.get("payerNum");
@@ -49,7 +49,7 @@ public class StatelessFilter extends AccessControlFilter {
 			String reserve3 = treeMap.get("reserve3");
 			token = new PayToken(payKey, payerTypeCode, busiTypeCode, payerName, payerIdNum, payerNum, amt, returnUrl, notifyUrl, reserve1, reserve2, reserve3, sign, signType);
 			((PayToken)token).setParams(getTreeMap(treeMap));
-		}else if(url.indexOf("orderQuery")>=0){
+		}else if(url.indexOf("orderQuery")>=0){//订单查询
 			String payerNum = treeMap.get("payerNum");
 			if(payerNum == null || payerNum.equals("")){
 				String startDate = treeMap.get("startDate");
@@ -61,13 +61,13 @@ public class StatelessFilter extends AccessControlFilter {
 				token = new QueryToken(payKey, busiTypeCode, payerTypeCode, payerNum, sign, signType);
 				((QueryToken)token).setParams(getTreeMap(treeMap));
 			}
-		}else if(url.indexOf("return") >=0){
+		}else if(url.indexOf("return") >=0){//页面通知
 			token = new ReturnToken(payKey, sign, signType);
 			((ReturnToken)token).setParams(getTreeMap(treeMap));
-		}else if(url.indexOf("notify") >=0){
+		}else if(url.indexOf("notify") >=0){//后台通知
 			token = new NotifyToken(payKey, sign, signType);
 			((NotifyToken)token).setParams(getTreeMap(treeMap));
-		}else if(url.indexOf("payBank") >=0){
+		}else if(url.indexOf("payBank") >=0){//支付
 			String amt = treeMap.get("amt");
 			token = new PaymentToken(payKey, sign, signType);
 			((PaymentToken)token).setParams(getTreeMap(treeMap));

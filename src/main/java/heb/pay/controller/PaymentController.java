@@ -54,7 +54,7 @@ public class PaymentController {
 	@Autowired
 	private UserService userservice;
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@RequestMapping(value="/pay/payBank")
 	public ModelAndView doPayBank(HttpServletRequest request,HttpServletResponse response,ModelAndView model){
 		Map<String,Object> params = PageUtils.getParameters(request);
@@ -69,26 +69,31 @@ public class PaymentController {
 		//验证数据
 		Map<String,Object> retMap = payOpService.checkBaseInfo(payKey, payerTypeCode, amt);
 		if(retMap.containsKey("error")){
-			int ckRet = Integer.parseInt(retMap.get("error").toString());
-			switch (ckRet) {
-			case -1:
-				model.addObject("errorCode", "ERROR1569875421001");
-				model.addObject("errorInfo", "用户不存在！");
+			String error = retMap.get("error").toString();
+			switch (error) {
+			case "no_user":
+				model.addObject("errorCode", "1001");
+				model.addObject("errorInfo", "此执收单位不存在");
 				model.setViewName("payment_defeat");
 				break;
-			case -2:
-				model.addObject("errorCode", "ERROR78984710025");
-				model.addObject("errorInfo", "该用户下没有该缴费类型！");
+			case "no_unit":
+				model.addObject("errorCode", "1002");
+				model.addObject("errorInfo", "此单位不存在");
 				model.setViewName("payment_defeat");
 				break;
-			case -3:
-				model.addObject("errorCode", "ERROR73901038718");
-				model.addObject("errorInfo", "超出限额！");
+			case "no_paytype":
+				model.addObject("errorCode", "1003");
+				model.addObject("errorInfo", "此执收单位下没有该缴费类型");
 				model.setViewName("payment_defeat");
 				break;
-			case -4:
-				model.addObject("errorCode", "ERROR78984710025");
-				model.addObject("errorInfo", "该用户下没有可用支付方式！");
+			case "out_pay":
+				model.addObject("errorCode", "1004");
+				model.addObject("errorInfo", "超出支付限额");
+				model.setViewName("payment_defeat");
+				break;
+			case "no_pay":
+				model.addObject("errorCode", "1005");
+				model.addObject("errorInfo", "此执收单位下没有可用的支付方式");
 				model.setViewName("payment_defeat");
 				break;
 			}
@@ -102,26 +107,26 @@ public class PaymentController {
 		//验证订单有效性
 		Map<String,Object> orderRetMap = payOpService.checkOrderExist(payerNum, merchantInfo.getUser_no(), payerTypeCode, busiTypeCode, amt);
 		if(orderRetMap.containsKey("error")){
-			int orderRet = Integer.parseInt(orderRetMap.get("error").toString());
-			switch (orderRet) {
-			case -1:
-				model.addObject("errorCode", "ERROR-ORDER"+payerNum);
-				model.addObject("errorInfo", "当前订单已支付成功，无需重复支付，请查看你的交易记录确认！");
+			String error = orderRetMap.get("error").toString();
+			switch (error) {
+			case "payed":
+				model.addObject("errorCode", "1101");
+				model.addObject("errorInfo", "订单（"+ payerNum +"）已支付成功，无需重复支付，请查看你的交易记录确认");
 				model.setViewName("payment_defeat");
 				break;
-			case -2:
-				model.addObject("errorCode", "ERROR-ORDER"+payerNum);
-				model.addObject("errorInfo", "订单正在支付中，请等待支付完成！");
+			case "paying":
+				model.addObject("errorCode", "1102");
+				model.addObject("errorInfo", "订单（"+ payerNum +"）正在支付中，请等待支付完成");
 				model.setViewName("payment_defeat");
 				break;
-			case -3:
-				model.addObject("errorCode", "ERROR-ORDER"+payerNum);
-				model.addObject("errorInfo", "订单结果：失败，请重新生成订单！");
+			case "pay_fail":
+				model.addObject("errorCode", "1103");
+				model.addObject("errorInfo", "订单（"+ payerNum +"）失败，请重新生成订单");
 				model.setViewName("payment_defeat");
 				break;
-			case -4:
-				model.addObject("errorCode", "ERROR-ORDER"+payerNum);
-				model.addObject("errorInfo", "此订单已过期，请重新生成订单再支付！");
+			case "pay_out":
+				model.addObject("errorCode", "1104");
+				model.addObject("errorInfo", "订单（"+ payerNum +"）已过期，请重新生成订单再支付");
 				model.setViewName("payment_defeat");
 				break;
 			}
@@ -144,16 +149,16 @@ public class PaymentController {
 		// 插入订单记录表
 		Map<String,Object> recordRetMap = payOpService.insertZFOrderRecord(payWayCode, payTpyeCode,returnUrl,notifyUrl, paymentOrder);
 		if(recordRetMap.containsKey("error")){
-			model.addObject("errorCode", "ERROR-ORDER"+payerNum);
-			model.addObject("errorInfo", "创建支付记录信息失败，请重新支付！");
+			model.addObject("errorCode", "1201");
+			model.addObject("errorInfo", "订单（"+ payerNum +"）创建支付记录信息失败，请重新支付");
 			model.setViewName("payment_defeat");
 			return model;
 		}
 		//获取支付信息
 		List<MerchantPayInfo> mPayInfoList = payService.getMerchantPayInfo(paymentOrder.getMerchant_no(),payWayCode);
 		if(mPayInfoList == null || mPayInfoList.size()<=0){
-			model.addObject("errorCode", "ERROR10010098710");
-			model.addObject("errorInfo", "该用户下无可用银行信息！");
+			model.addObject("errorCode", "1202");
+			model.addObject("errorInfo", "此执收单位下无可用银行信息");
 			model.setViewName("payment_defeat");
 			return model;
 		}
@@ -162,8 +167,8 @@ public class PaymentController {
 		StringBuilder originalStr = null;//银行参数，用于加密，包含秘钥
 		DecimalFormat df = new DecimalFormat("######0.00");
 		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
-		//建行
-		if(payWayCode.equals("CCB-BANK")){
+		
+		if(payWayCode.equals("CCB-BANK")){//建行
 			url = BankConfigUtils.bankConfig.get("CCB-BANK");
 			originalStr = new StringBuilder();
 			url += "MERCHANTID="+mPayInfoList.get(0).getTg_merchant_id();
@@ -188,8 +193,10 @@ public class PaymentController {
 			String MAC = MD5Util.md5(originalStr.toString());
 			url += "&MAC="+MAC;
 			model.addObject("type","CCB");
-		//中行
-		}else if(payWayCode.equals("BOC-BANK")){
+		
+			model.addObject("url", url);
+			model.setViewName("payment_bank");
+		}else if(payWayCode.equals("BOC-BANK")){//中行
 			url = BankConfigUtils.bankConfig.get("BOC-BANK");
 			originalStr = new StringBuilder();
 			
@@ -223,13 +230,15 @@ public class PaymentController {
 			paramsMap.put("signData",signData);
 			model.addObject("data",paramsMap);
 			model.addObject("type","BOC");
-		//农行
-		}else if(payWayCode.equals("ABC-BANK")){
+			
+			model.addObject("url", url);
+			model.setViewName("payment_bank");
+		}else if(payWayCode.equals("ABC-BANK")){//农行
 			String orderNo = recordRetMap.get("bankOrderNo").toString();
 			String OrderDate = new SimpleDateFormat("yyyy/MM/dd").format(paymentOrder.getCreate_time());
 			String OrderTime = new SimpleDateFormat("HH:mm:ss").format(paymentOrder.getCreate_time());
 			String orderAmount = df.format(amt);
-			String merchantNo = mPayInfoList.get(0).getTg_merchant_id();
+			//String merchantNo = mPayInfoList.get(0).getTg_merchant_id();
 			//1、生成订单对象
 			PaymentRequest paymentRequest = new PaymentRequest();
 			paymentRequest.dicOrder.put("PayTypeID", "ImmediatePay");
@@ -252,15 +261,17 @@ public class PaymentController {
 			
 			if (ReturnCode.equals("0000")){
 				url = json.GetKeyValue("PaymentURL");
+				model.addObject("url", url);
+				model.setViewName("payment_bank");
 			}else{
 				String ErrorMessage = json.GetKeyValue("ErrorMessage");
-				logger.info(ErrorMessage);
+				model.addObject("errorCode", "2001");
+				model.addObject("errorInfo", ErrorMessage);
+				model.setViewName("payment_defeat");
 			}
 			model.addObject("type","ABC");
 		}
 		
-		model.addObject("url", url);
-		model.setViewName("payment_bank");
 		return model;
 	}
 	/**

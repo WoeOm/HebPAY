@@ -1,6 +1,5 @@
 package heb.pay.dao;
 
-import heb.pay.entity.PaymentOrder;
 import heb.pay.entity.User;
 
 import java.util.List;

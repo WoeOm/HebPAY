@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>网上支付批量查询(一点接入商户)</title>
+<style type="text/css">
+<!--
+body {
+	font-size: 9pt;
+	font-style: normal;
+	line-height: 20px;
+	font-weight: normal;
+	font-variant: normal;
+	color: #000099;
+}
+.smallfont {
+	font-size: 9pt;
+	font-weight: bold;
+	color: #FF0000;
+}
+.bigFont {
+	font-size: 16pt;
+	font-style: normal;
+	font-weight: bolder;
+	font-variant: normal;
+	color: #000000;
+}
+.text {
+	font-size: 9pt;
+	font-style: normal;
+	line-height: normal;
+	color: #000000;
+	background-color: #6699FF;
+	letter-spacing: normal;
+	word-spacing: normal;
+	width: auto;
+	border: 1px dotted #CCCCCC;
+}
+.text1 {
+	font-size: 14pt;
+	font-weight: bold;
+	color: #330099;
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: dotted;
+	border-left-style: none;
+	border-top-color: #FF0000;
+	border-right-color: #FF0000;
+	border-bottom-color: #FF0000;
+	border-left-color: #FF0000;
+}
+-->
+</style>
+<script language="JavaScript" src="md5.js">
+</script>
+<script language="JavaScript"  src="pay.js">
+</script>
+</head>
+
+<body bgcolor="#CCCCCC" onLoad="setValue()">
+<table width="760" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr>
+    <td><form action="" method="post" onSubmit="return false;" name="MD5form" id="MD5form" target="_blank">
+        <table width="80%" border="1" align="center" cellpadding="0" cellspacing="0" bordercolor="#000000">
+          <tr> 
+            <td height="49"> <div align="center"><span class="bigFont">网上银行商户端MD5模拟程序
+			<br/>
+			（一点商户批量查询接口）
+                </span><br>
+                <span class="smallfont">Vsersion 1.0<br>
+                Author : tianrong<br>
+                Create :2010/03/29</span></div></td>
+          </tr>
+          <tr> 
+            <td bordercolor="#CCCCCC" bgcolor="#FFFFFF"><table width="80%" border="0" align="center" cellpadding="0" cellspacing="0">
+                <tr> 
+                  <td width="26%" height="20" nowrap>商户代码【MERCHANTID】</td>
+                  <td width="74%" height="20"><input name="MERCHANTID" type="text" class="text1" id="MERCHANTID"></td>
+                </tr>
+
+                <tr> 
+                  <td height="20">分行代码【BRANCHID】</td>
+                  <td height="20"><input name="BRANCHID" type="text" class="text1" id="BRANCHID"></td>
+                </tr>
+                <tr> 
+                  <td height="20">POSID【POSID】</td>
+                  <td height="20"><input name="POSID" type="text" class="text1" id="POSID"></td>
+                </tr>
+                <tr> 
+                  <td height="20">订单日期【ORDERDATE】</td>
+                  <td height="20"><input name="ORDERDATE" type="text" class="text1" id="ORDERDATE"></td>
+                </tr>
+                <tr> 
+                  <td height="20">开始定单时间【BEGORDERTIME】</td>
+                  <td height="20"><input name="BEGORDERTIME" type="text" class="text1" id="BEGORDERTIME"></td>
+                </tr>
+                <tr> 
+                  <td height="20">结束订单时间【ENDORDERTIME】</td>
+                  <td height="20"><input name="ENDORDERTIME" type="text" class="text1" id="ENDORDERTIME"></td>
+                </tr>
+				
+                <tr> 
+                  <td height="20">订单号【ORDERID】</td>
+                  <td height="20"><input name="ORDERID" type="text" class="text1" id="ORDERID"></td>
+                </tr>
+               
+                <tr> 
+                  <td height="20">密码【QUPWD】</td>
+                  <td height="20"><input name="QUPWD" type="text" class="text1" id="QUPWD"></td>
+                </tr>
+                <tr> 
+                  <td height="20">交易码【TXCODE】</td>
+                  <td height="20"><input name="TXCODE" type="text" class="text1" id="TXCODE"></td>
+                </tr>
+
+				<tr> 
+                  <td height="20">流水类型【TYPE】</td>
+                  <td height="20"><input name="TYPE" type="text" class="text1" id="TYPE"></td>
+                </tr>
+
+				<tr> 
+                  <td height="20">流水状态【KIND】</td>
+                  <td height="20"><input name="KIND" type="text" class="text1" id="KIND"></td>
+                </tr>
+
+				<tr> 
+                  <td height="20">交易状态【STATUS】</td>
+                  <td height="20"><input name="STATUS" type="text" class="text1" id="STATUS"></td>
+                </tr>
+
+                <tr> 
+                  <td height="20">查询方式【SEL_TYPE】</td>
+                  <td height="20"><input name="SEL_TYPE" type="text" class="text1" id="SEL_TYPE"></td>
+                </tr>
+				<tr> 
+                  <td height="20">页码【PAGE】</td>
+                  <td height="20"><input name="PAGE" type="text" class="text1" id="PAGE"></td>
+                </tr>
+                <tr> 
+                  <td height="20">操作员编号【OPERATOR】</td>
+                  <td height="20"><input name="OPERATOR" type="text" class="text1" id="OPERATOR"></td>
+                </tr>                						
+                <tr> 
+                  <td height="20">银行网址【URL】</td>
+                  <td height="20"><input name="bankURL" type="text" class="text1" id="bankURL">
+                    <span class="smallfont">说明：要从http://开始添加，到？号以前，？号不要添加</span></td>
+                </tr>
+                <tr> 
+                  <td height="20" colspan="2"><div align="center"> 
+                      <input name="makeMd5" type="button" id="makeMd5" value="生成MD5串" onClick="make()">
+                      <input type="button" name="Submit2" value="重置输入数据项" onClick="newRest()">
+                    </div></td>
+                </tr>
+                <tr> 
+                  <td height="20" colspan="2"><div align="center"> 
+                      <textarea name="result" cols="80" rows="10" wrap="VIRTUAL" class="text" id="result"></textarea>
+                    </div></td>
+                </tr>
+                <tr> 
+                  <td height="20" colspan="2"><div align="center"> 
+                      <input name="sendB" type="button" id="sendB" onClick="go(window.MD5form.result.value)" value="   发送到银行端   ">
+                    </div></td>
+                </tr>
+              </table></td>
+          </tr>
+          <input type="hidden" name="MAC" value="">
+		  <input type="hidden" name="CHANNEL" id="CHANNEL" value="">
+        </table>
+        <div align="center">相关变量，可以通过对pay.js进行配置</div>
+      </form></td>
+  </tr>
+</table>
+</body>
+</html>
