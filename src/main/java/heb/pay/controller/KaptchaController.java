@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 
-@Controller
-public class KaptchaController {
+   
+@Controller  
+public class KaptchaController {  
+
 	
 	public static String DEFAULT_CAPTCHA_SESSION = "kaptcha_session";
 	
