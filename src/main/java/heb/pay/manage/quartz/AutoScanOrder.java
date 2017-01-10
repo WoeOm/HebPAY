@@ -57,18 +57,18 @@ public class AutoScanOrder {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void autoScan(){
 		List<Map<String,Object>> paymentOrders = new ArrayList<Map<String,Object>>();
 		AutoScanService service = (AutoScanService) BeanUtils.getInstance().getBean("autoScanServiceImpl");
 		paymentOrders = service.getAutoScan();
 		for(int i = 0;i<paymentOrders.size();i++){
 			String orderId = paymentOrders.get(i).get("BANK_ORDER_NO").toString();
-			String payWayCode=paymentOrders.get(i).get("PAY_WAY_CODE").toString();
-			String merchantNo=paymentOrders.get(i).get("MERCHANT_NO").toString();//商户编号
-			String orderNo=paymentOrders.get(i).get("MERCHANT_ORDER_NO").toString();//商户订单号
+			String payWayCode = paymentOrders.get(i).get("PAY_WAY_CODE").toString();
+			String merchantNo = paymentOrders.get(i).get("MERCHANT_NO").toString();//商户编号
 			Map<String, Object> map = new HashMap<String, Object>();
-			//建行BBC_BANK
-			if(payWayCode.equals("CCB-BANK")){
+			
+			if(payWayCode.equals("CCB-BANK")){//建行BBC_BANK
 				map.put("requestXml", getXML(orderId,payWayCode));
 				try {
 					String result = HttpClientUtil.doPost("http://localhost:8888/", map, "UTF-8");
@@ -82,12 +82,9 @@ public class AutoScanOrder {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
-			//中行BOC-BANK
-			if(payWayCode.equals("BOC-BANK")){
+			}else if(payWayCode.equals("BOC-BANK")){//中行BOC-BANK
 			      StringBuilder plainTextBuilder = new StringBuilder();
-			      plainTextBuilder.append(merchantNo).append(":")
-			        .append(orderNo);
+			      plainTextBuilder.append(merchantNo).append(":").append(orderId);
 			      String plainText = plainTextBuilder.toString();
 			      byte[] plainTextByte=null;
 				try {
@@ -97,46 +94,37 @@ public class AutoScanOrder {
 				}
 			      String signData = CheckBankDataUtils.bocEncode(plainTextByte);
 			      map.put("merchantNo", merchantNo);
-			      map.put("orderNo", orderNo);
+			      map.put("orderNo", orderId);
 			      map.put("signData", signData);
 			      try {
 					String result = HttpClientUtil.doPost(BankConfigUtils.bankConfig.get("BOC-BANK-SCAN"), map, "UTF-8");
 					String status = StringUtils.substringBetween(result, "<tranStauts>", "</tranStauts>");
 					if(result!=null){
 						LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
-						link.put("ORDERID", orderId);
-						link.put("SUCCESS", status);
+						link.put("orderNo", orderId);
+						link.put("orderStatus", status);
 						notifyService.notice(link, 1,"boc");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			}
-			//农行
-			if(payWayCode.equals("ABC-BANK")){
-				String payTypeID = "ImmediatePay";
-				String queryTpye = "0";
-				if(queryTpye.equals("0")){
-					queryTpye = "false";
-				}else if (queryTpye.equals("1")){
-					queryTpye="true";
+			}else if(payWayCode.equals("ABC-BANK")){//农行
+				QueryOrderRequest queryRequest = new QueryOrderRequest();
+				queryRequest.queryRequest.put("PayTypeID", "ImmediatePay");    //设定交易类型
+				queryRequest.queryRequest.put("OrderNo",orderId);    //设定订单编号 （必要信息）
+				queryRequest.queryRequest.put("QueryDetail", "false");//设定查询方式
+				JSON json = queryRequest.postRequest();
+				String returnCode = json.GetKeyValue("ReturnCode");
+				//String ErrorMessage = json.GetKeyValue("ErrorMessage");
+				LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
+				if (returnCode.equals("0000")){
+					link.put("orderNo", orderId);
+					link.put("orderStatus", "1");
+				}else{
+					link.put("orderNo", orderId);
+					link.put("orderStatus", "0");
 				}
-
-				QueryOrderRequest tQueryRequest = new QueryOrderRequest();
-				tQueryRequest.queryRequest.put("PayTypeID", payTypeID);    //设定交易类型
-				tQueryRequest.queryRequest.put("OrderNo",orderNo);    //设定订单编号 （必要信息）
-				tQueryRequest.queryRequest.put("QueryDetail", queryTpye);//设定查询方式
-				JSON json = tQueryRequest.postRequest();
-
-				String status = json.GetKeyValue("ReturnCode");
-				String ErrorMessage = json.GetKeyValue("ErrorMessage");
-				if (status !=null)
-				{
-					LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
-					link.put("ORDERID", orderId);
-					link.put("SUCCESS", status);
-					notifyService.notice(link, 1,"abc");
-				}
+				notifyService.notice(link, 1,"abc");
 			}
 		}
 	}

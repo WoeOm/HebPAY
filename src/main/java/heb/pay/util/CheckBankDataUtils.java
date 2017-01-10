@@ -77,7 +77,7 @@ public class CheckBankDataUtils {
 	}
 	
 	public static String getABCCertPath(){
-		return CheckBankDataUtils.class.getResource("/").getPath() + "cert/abc/";
+		return (CheckBankDataUtils.class.getResource("/").getPath() + "cert/abc/").replace("%20", " ").substring(1);
 	}
 
 	public static void main(String[] args) {

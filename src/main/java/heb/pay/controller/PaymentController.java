@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import heb.pay.entity.MerchantInfo;
 import heb.pay.entity.MerchantPayInfo;
 import heb.pay.entity.PaymentOrder;
@@ -20,8 +21,10 @@ import heb.pay.util.BankConfigUtils;
 import heb.pay.util.CheckBankDataUtils;
 import heb.pay.util.MD5Util;
 import heb.pay.util.PageUtils;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,6 +32,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
+
 import com.abc.pay.client.JSON;
 import com.abc.pay.client.ebus.PaymentRequest;
 
@@ -222,25 +226,26 @@ public class PaymentController {
 		//农行
 		}else if(payWayCode.equals("ABC-BANK")){
 			String orderNo = recordRetMap.get("bankOrderNo").toString();
-			String orderTime = format.format(paymentOrder.getCreate_time());
+			String OrderDate = new SimpleDateFormat("yyyy/MM/dd").format(paymentOrder.getCreate_time());
+			String OrderTime = new SimpleDateFormat("HH:mm:ss").format(paymentOrder.getCreate_time());
 			String orderAmount = df.format(amt);
 			String merchantNo = mPayInfoList.get(0).getTg_merchant_id();
 			//1、生成订单对象
 			PaymentRequest paymentRequest = new PaymentRequest();
 			paymentRequest.dicOrder.put("PayTypeID", "ImmediatePay");
-			paymentRequest.dicOrder.put("OrderDate", new SimpleDateFormat("yyyy/MM/dd").format(orderTime) );
-			paymentRequest.dicOrder.put("OrderTime", new SimpleDateFormat("HH:mm:ss").format(orderTime));
+			paymentRequest.dicOrder.put("OrderDate", OrderDate);
+			paymentRequest.dicOrder.put("OrderTime", OrderTime);
 			paymentRequest.dicOrder.put("OrderNo", orderNo);
-			paymentRequest.dicOrder.put("CurrencyCode", 156);
+			paymentRequest.dicOrder.put("CurrencyCode", "156");
 			paymentRequest.dicOrder.put("OrderAmount", orderAmount);
-			paymentRequest.dicOrder.put("InstallmentMark", 0);
+			paymentRequest.dicOrder.put("InstallmentMark", "0");
 			paymentRequest.dicOrder.put("CommodityType", "0499"); 
 			//3、生成支付请求对象
-			paymentRequest.dicRequest.put("PaymentType", 1); //设定支付类型
-			paymentRequest.dicRequest.put("PaymentLinkType", 1);//1：internet网络接入
-			paymentRequest.dicRequest.put("NotifyType", 0); //0页面通知  1服务端通知
+			paymentRequest.dicRequest.put("PaymentType", "1"); //设定支付类型
+			paymentRequest.dicRequest.put("PaymentLinkType", "1");//1：internet网络接入
+			paymentRequest.dicRequest.put("NotifyType", "0"); //0页面通知  1服务端通知
 			paymentRequest.dicRequest.put("ResultNotifyURL", returnUrl);//设定通知URL地址
-			paymentRequest.dicRequest.put("IsBreakAccount", 0);//设定交易是否分账
+			paymentRequest.dicRequest.put("IsBreakAccount", "0");//设定交易是否分账
 
 			JSON json = paymentRequest.postRequest();
 			String ReturnCode = json.GetKeyValue("ReturnCode");

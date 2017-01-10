@@ -11,21 +11,16 @@ import heb.pay.service.PayService;
 import heb.pay.util.CheckBankDataUtils;
 import heb.pay.util.JSONUtils;
 import heb.pay.util.MD5Util;
-
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
-
-import com.abc.pay.client.JSON;
 import com.abc.pay.client.TrxException;
 import com.abc.pay.client.ebus.PaymentResult;
-import com.abc.pay.client.ebus.QueryOrderRequest;
 
 @Service
 public class NotifyServiceImpl implements NotifyService {
@@ -40,7 +35,6 @@ public class NotifyServiceImpl implements NotifyService {
 	@Autowired
 	private QueueSender queueSender;
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void notice(LinkedHashMap<String, String> params, int type,String bankName) {
 		ModelAndView model = new ModelAndView();
@@ -94,11 +88,8 @@ public class NotifyServiceImpl implements NotifyService {
 				upStatus = "FAILED";
 			}
 		}else if(bankName.equals("abc")){
-			orderNo = params.get("orderNo")==null?"":params.get("orderNo");
-		
 			if(type == 0){
-				String msg=params.get("MSG").toString();
-				orderNo = "";
+				String msg = params.get("MSG");
 				PaymentResult paymentResult = null;
 				try {
 					paymentResult = new PaymentResult(msg);
@@ -118,22 +109,12 @@ public class NotifyServiceImpl implements NotifyService {
 					e.printStackTrace();
 				}
 			}else if(type == 1){
-
-				QueryOrderRequest queryRequest = new QueryOrderRequest();
-				queryRequest.queryRequest.put("PayTypeID", "ImmediatePay");//设定交易类型
-				queryRequest.queryRequest.put("OrderNo",orderNo);
-				queryRequest.queryRequest.put("QueryDetail", false);//false 结果查询 true 详细查询
-				JSON json = queryRequest.postRequest();
-
-				String ReturnCode = json.GetKeyValue("ReturnCode");
-				String ErrorMessage = json.GetKeyValue("ErrorMessage");
-				orderNo = json.GetKeyValue("OrderNo") ;
-				if (ReturnCode.equals("0000")){
-				    orderStatus="1";
-				    status = "1";
+				orderNo = params.get("orderNo")==null?"":params.get("orderNo");
+				orderStatus = params.get("orderStatus")==null?"":params.get("orderStatus");
+				if(orderStatus.equals("1")){
+					status = "1";
 					upStatus = "SUCCESS";
 				}else{
-					orderStatus="0";
 					status = "0";
 					upStatus = "FAILED";
 				}

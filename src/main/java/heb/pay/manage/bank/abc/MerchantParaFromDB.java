@@ -85,7 +85,7 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			iMerchantCertList.add(util.readFile(CheckBankDataUtils.getABCCertPath()+"xxqh.pfx"));
 			para.setMerchantCertFileList(iMerchantCertList);
             
-      //设置商户证书密码。如果是多商户则在iMerchantPasswordList放置多条记录。注意：密码顺序要与商户编号顺序一致
+			//设置商户证书密码。如果是多商户则在iMerchantPasswordList放置多条记录。注意：密码顺序要与商户编号顺序一致
 			ArrayList<String> iMerchantPasswordList = new ArrayList<String>();
 			iMerchantPasswordList.add("12341234");// 商户私钥密码
 			para.setMerchantCertPasswordList(iMerchantPasswordList);
