@@ -1,5 +1,17 @@
 package heb.pay.service.impl;
 
+import heb.pay.entity.MerchantPayConfig;
+import heb.pay.entity.MerchantPayInfo;
+import heb.pay.entity.PayWay;
+import heb.pay.entity.PaymentOrder;
+import heb.pay.manage.activemq.QueueSender;
+import heb.pay.service.NotifyService;
+import heb.pay.service.PayOpService;
+import heb.pay.service.PayService;
+import heb.pay.util.CheckBankDataUtils;
+import heb.pay.util.JSONUtils;
+import heb.pay.util.MD5Util;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,16 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 
-import heb.pay.entity.MerchantPayConfig;
-import heb.pay.entity.MerchantPayInfo;
-import heb.pay.entity.PayWay;
-import heb.pay.entity.PaymentOrder;
-import heb.pay.manage.activemq.QueueSender;
-import heb.pay.service.NotifyService;
-import heb.pay.service.PayService;
-import heb.pay.util.CheckBankDataUtils;
-import heb.pay.util.JSONUtils;
-import heb.pay.util.MD5Util;
+import com.abc.pay.client.JSON;
+import com.abc.pay.client.TrxException;
+import com.abc.pay.client.ebus.PaymentResult;
+import com.abc.pay.client.ebus.QueryOrderRequest;
 
 @Service
 public class NotifyServiceImpl implements NotifyService {
@@ -28,106 +34,165 @@ public class NotifyServiceImpl implements NotifyService {
 	
 	@Autowired
 	private PayService payService;
+	@Autowired
+	private PayOpService payOpService;
 	
 	@Autowired
 	private QueueSender queueSender;
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void notice(LinkedHashMap<String, String> params, int type) {
-		logger.info("notice正在执行....");
+	public void notice(LinkedHashMap<String, String> params, int type,String bankName) {
 		ModelAndView model = new ModelAndView();
-		String postId = params.get("POSID")==null?"":params.get("POSID");
-		String bankId = params.get("BRANCHID")==null?"":params.get("BRANCHID");
-		String orderId = params.get("ORDERID")==null?"":params.get("ORDERID");
-		String success = params.get("SUCCESS")==null?"":params.get("SUCCESS");
+		List<MerchantPayInfo> merPayInfoList = null;
 		
-		List<MerchantPayInfo> merPayInfoList = payService.getMerPayInfoByPostid(postId, bankId);
-		if(merPayInfoList==null || merPayInfoList.size()<=0){
-			return;
-		}
-		logger.info("notice正在执行...商户验证通过...");
-		if(type==0){
-			String publicKey = merPayInfoList.get(0).getTg_rsa_public_key();
-			if(!CheckBankDataUtils.checkCCBData(params, publicKey)){
-				return;
-			}
-		}
-		logger.info("notice正在执行...数据验证通过...");
-		String statusReturn = "";
-		String statusDB = "";
-		if(type==0){
-			if(success.equals("Y")){
-				statusReturn = "1";
-				statusDB = "SUCCESS";
-			}else{
-				statusReturn = "0";
-				statusDB = "FAILED";
-			}
-		}else if(type==1){
-			if(success.equals("1")){
-				statusReturn = "1";
-				statusDB = "SUCCESS";
-			}else{
-				statusReturn = "0";
-				statusDB = "FAILED";
-			}
-		}
+		String orderNo = "";
+		String orderStatus = "";
 		
-		logger.info("notice正在执行...状态获取成功..."+statusDB);
-		List<PaymentOrder> payOrderList = payService.getPayOrderByOrderId(orderId);
-		if(payOrderList == null || payOrderList.size()<=0){
-			return;
-		}
-		logger.info("notice正在执行...订单验证通过...");
-		if(!payOrderList.get(0).getStatus().equals("SUCCESS")){
-			int ret = payService.updateOrderByOrderId(orderId,statusDB);
-			if(ret>0){
-				int retRecord = payService.updateRecordByOrderId(orderId,statusDB);
-				if(retRecord<0){
+		String status = "0";
+		String upStatus = "";
+		if(bankName.equals("ccb")){
+			//1 根据银行获取银行返回数据
+			orderNo = params.get("ORDERID")==null?"":params.get("ORDERID");
+			orderStatus = params.get("SUCCESS")==null?"":params.get("SUCCESS");
+			
+			String postId = params.get("POSID")==null?"":params.get("POSID");
+			String bankId = params.get("BRANCHID")==null?"":params.get("BRANCHID");
+			if(type == 0){
+				if(orderStatus.equals("Y")){
+					status = "1";
+					upStatus = "SUCCESS";
+				}else{
+					status = "0";
+					upStatus = "FAILED";
+				}
+				merPayInfoList = payService.getMerPayInfoByPostid(postId, bankId);
+				String publicKey = merPayInfoList.get(0).getTg_rsa_public_key();
+				//如果type值为0，需要验证银行数据有效性
+				if(!CheckBankDataUtils.checkCCBData(params, publicKey)){
 					return;
 				}
-			}else{
-				return;
+			}else if(type == 1){
+				if(orderStatus.equals("1")){
+					status = "1";
+					upStatus = "SUCCESS";
+				}else{
+					status = "0";
+					upStatus = "FAILED";
+				}
 			}
-			
+		}else if(bankName.equals("boc")){
+			//1 根据银行获取银行返回数据
+			orderNo = params.get("orderNo")==null?"":params.get("orderNo");
+			orderStatus = params.get("orderStatus")==null?"":params.get("orderStatus");
+
+			if(orderStatus.equals("1")){
+				status = "1";
+				upStatus = "SUCCESS";
+			}else{
+				status = "0";
+				upStatus = "FAILED";
+			}
+		}else if(bankName.equals("abc")){
+			orderNo = params.get("orderNo")==null?"":params.get("orderNo");
+		
+			if(type == 0){
+				String msg=params.get("MSG").toString();
+				orderNo = "";
+				PaymentResult paymentResult = null;
+				try {
+					paymentResult = new PaymentResult(msg);
+					boolean isSuccess = paymentResult.isSuccess();
+					if(isSuccess){
+						orderStatus="1";
+						status = "1";
+						upStatus = "SUCCESS";
+						
+					}else{
+						orderStatus="0";
+						status = "0";
+						upStatus = "FAILED";
+					}
+					orderNo = paymentResult.getValue("OrderNO");
+				} catch (TrxException e) {
+					e.printStackTrace();
+				}
+			}else if(type == 1){
+
+				QueryOrderRequest queryRequest = new QueryOrderRequest();
+				queryRequest.queryRequest.put("PayTypeID", "ImmediatePay");//设定交易类型
+				queryRequest.queryRequest.put("OrderNo",orderNo);
+				queryRequest.queryRequest.put("QueryDetail", false);//false 结果查询 true 详细查询
+				JSON json = queryRequest.postRequest();
+
+				String ReturnCode = json.GetKeyValue("ReturnCode");
+				String ErrorMessage = json.GetKeyValue("ErrorMessage");
+				orderNo = json.GetKeyValue("OrderNo") ;
+				if (ReturnCode.equals("0000")){
+				    orderStatus="1";
+				    status = "1";
+					upStatus = "SUCCESS";
+				}else{
+					orderStatus="0";
+					status = "0";
+					upStatus = "FAILED";
+				}
+			}
 		}
 		
-		logger.info("notice正在执行...订单更新通过...");
-		String merchantNO = payOrderList.get(0).getMerchant_no();
-		String merOrderNO = payOrderList.get(0).getMerchant_order_no();
-		String payWayCode = payOrderList.get(0).getPay_way_code();
-		String payTypeCode = payOrderList.get(0).getPay_type_code();
-		String payerTypeCode = payOrderList.get(0).getProduct_name();
-		String busiTypeCode = payOrderList.get(0).getBusi_type_code();
-		double amt = payOrderList.get(0).getOrder_amount();
-		List<PayWay> payWayList = payService.getPayWayByCode(payWayCode,payTypeCode);
-		String payProductCode = payWayList.get(0).getPay_product_code();
+		//获取订单信息
+		Map<String,Object> orderRetMap = payOpService.getPayOrderByOrderId(orderNo);
+		if(orderRetMap.containsKey("error")){
+			return;
+		}
+		
+		PaymentOrder paymentOrder = (PaymentOrder)orderRetMap.get("paymentOrder");
+		PayWay payWay = (PayWay)orderRetMap.get("payWay");
+		//数据库订单状态
+		String statusDB = paymentOrder.getStatus();
+		
+		//获取通知表中的条数
+		String merchantNO = paymentOrder.getMerchant_no();
+		String merOrderNO = paymentOrder.getMerchant_order_no();
+		Map<String,Object> paramsMap = new HashMap<String, Object>();
+		paramsMap.put("user_no",merchantNO);
+		paramsMap.put("payerNum",merOrderNO);
+		int count = payService.getCount(paramsMap);
+		if(count>0){
+			return;
+		}
+		//判断不推送条件
+		if(bankName.equals("ccb")){
+			if(statusDB.equals("SUCCESS")||(statusDB.equals("FAILED")&& orderStatus.equals("N"))){
+				return;
+			}
+		}else if(bankName.equals("boc")){
+			if(statusDB.equals("SUCCESS")||(statusDB.equals("FAILED")&& !orderStatus.equals("1"))){
+				return;
+			}
+		}else if(bankName.equals("abc")){
+			if(statusDB.equals("SUCCESS")||(statusDB.equals("FAILED")&& !orderStatus.equals("1"))){
+				return;
+			}
+		}
+		
+		
+		//1.2更新订单表状态
+		if(!statusDB.equals("SUCCESS")){
+			int ret = payOpService.updateOrderStatus(orderNo,upStatus);
+			if(ret<=0){
+				return;
+			}
+		}
+		
+		//3 拼装数据，发送通知
+		String payerTypeCode = paymentOrder.getProduct_name();
+		String busiTypeCode = paymentOrder.getBusi_type_code();
+		double amt = paymentOrder.getOrder_amount();
+		String payProductCode = payWay.getPay_product_code();
 		List<MerchantPayConfig> merPayConfigList = payService.getMerPayConfig(merchantNO,payProductCode);
 		String payKey = merPayConfigList.get(0).getPay_key();
 		String paySecret = merPayConfigList.get(0).getPay_secret();
-		//插入t_jfpayorder表
-		/*List<BaseUnit> unitList = payService.getBaseUnit(merchantNO);
-		if(unitList == null || unitList.size()<=0){
-			model.addObject("errorCode", "ERROR-ORDER"+orderId);
-			model.addObject("errorInfo", "获取单位区划基本信息失败");
-			model.setViewName("payment_defeat");
-			return model;
-		}
-		int unitId = unitList.get(0).getUnitid();
-		int cantonId = unitList.get(0).getCantonid();
-		List<PayerType> payTypeList = payService.getPayerType(payerTypeCode); 
-		if(payTypeList == null || payTypeList.size()<=0){
-			model.addObject("errorCode", "ERROR-ORDER"+orderId);
-			model.addObject("errorInfo", "获取缴费类型基本信息失败");
-			model.setViewName("payment_defeat");
-			return model;
-		}
-		int payerTypeId = payTypeList.get(0).getPayertypeid();*/
-		logger.info("notice正在执行...即将跳转地址...");
-		String returnURL = "redirect:";
-		returnURL += payService.getReturnURLByOrderNum(merchantNO,merOrderNO);
-		model.setViewName(returnURL);
-		logger.info("notice正在执行...地址：..."+returnURL);
 		String originalStr = "";
 		LinkedHashMap<String,Object> map = new LinkedHashMap<String, Object>();
 		model.addObject("amt",amt);
@@ -145,28 +210,15 @@ public class NotifyServiceImpl implements NotifyService {
 		model.addObject("payerTypeCode",payerTypeCode);
 		map.put("payerTypeCode", payerTypeCode);
 		originalStr += "&payerTypeCode"+payerTypeCode;
-		model.addObject("status",statusReturn);
-		map.put("status", statusReturn);
-		originalStr += "&status="+statusReturn;
+		model.addObject("status",status);
+		map.put("status", status);
+		originalStr += "&status="+status;
 		String sign = MD5Util.md5(originalStr,"&paySecret="+paySecret);
 		model.addObject("sign",sign);
 		map.put("sign", sign);
 		model.addObject("signType", "MD5");
 		map.put("signType", "MD5");
-		logger.info("notice正在执行...参数设置成功..."+map.toString()+"..即将通知后台...");
-		if(type==1){
-			if(payOrderList.get(0).getStatus().equals("SUCCESS")){
-				return;
-			}
-		}
-		Map<String,Object> paramsMap = new HashMap<String, Object>();
-		paramsMap.put("user_no", merchantNO);
-		paramsMap.put("payerNum", merOrderNO);
-		int count = payService.getCount(paramsMap);
-		if(count==0){
-			queueSender.send(JSONUtils.mapToJson(map));
-		}
-
+		queueSender.send(JSONUtils.mapToJson(map));
 	}
 
 }

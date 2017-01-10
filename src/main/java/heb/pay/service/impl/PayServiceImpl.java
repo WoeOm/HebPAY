@@ -1,12 +1,5 @@
 package heb.pay.service.impl;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import heb.pay.dao.PayDAO;
 import heb.pay.entity.BaseUnit;
 import heb.pay.entity.MerchantInfo;
@@ -17,11 +10,20 @@ import heb.pay.entity.PayerType;
 import heb.pay.entity.PaymentOrder;
 import heb.pay.service.PayService;
 
+import java.security.KeyStore;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 @Service
 public class PayServiceImpl implements PayService {
 
 	@Autowired
 	private PayDAO payDAO;
+	
+	private KeyStore keystore;
 	
 	@Override
 	public String getSecretKey(String payKey) {
@@ -161,10 +163,18 @@ public class PayServiceImpl implements PayService {
 
 	@Override
 	public int getCount(Map<String,Object> paramsMap) {
-		// TODO Auto-generated method stub
 		return payDAO.getCount(paramsMap);
 	}
-	
+
+	@Override
+	public String getReturnUrlByOrderId(String orderId) {
+		return payDAO.getReturnUrlByOrderId(orderId);
+	}
+
+	@Override
+	public String getNotifyUrlByOrderId(String orderId) {
+		return payDAO.getNotifyUrlByOrderId(orderId);
+	}
 	
 	
 }

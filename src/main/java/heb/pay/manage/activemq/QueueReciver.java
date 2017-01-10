@@ -3,6 +3,7 @@ package heb.pay.manage.activemq;
 import heb.pay.entity.MerchantInfo;
 import heb.pay.manage.quartz.QuartzBean;
 import heb.pay.manage.quartz.QuartzManage;
+import heb.pay.service.PayOpService;
 import heb.pay.service.PayService;
 import heb.pay.util.HttpClientUtil;
 import heb.pay.util.JSONUtils;
@@ -32,27 +33,31 @@ public class QueueReciver implements MessageListener{
 	@Autowired
 	private PayService payService;
 	@Autowired
+	private PayOpService payOpService;
+	@Autowired
 	private QuartzManage quartzManage;
 
 	@Override
 	public void onMessage(Message message) {
+		logger.info("##进入JMS……");
 		try {
-			System.out.println("已进入通知方法QueueReciver....");
+			//1 接收执收单位推送数据
 			String text = ((TextMessage)message).getText();
 			Map<String,Object> map =  JSONUtils.jsonToMap(text);
-				
+			//获取执收单位推送后台地址
 			String notifyURL = payService.getNotifyURLByOrderNum(map.get("payKey").toString(),map.get("payerNum").toString());
+			logger.info("##后台推送URL："+notifyURL);
 			try {
+				//2 推送并等待结果
 				String result = HttpClientUtil.doPost(notifyURL, map, "UTF-8");
-				//如果result不符合要求，异步定时再次推送(notifyResult)
-				System.out.println("result:"+result);
+				//3 如果result不符合要求即不为"SUCCESS"，异步定时再次推送
 				if(!result.equals("SUCCESS")){
 					sendDataRepeat(text,map,notifyURL);
 				}
 				
 			} catch (Exception e) {
-				//XX 异步定时再次推送(notifyResult)
-				System.out.println("异常开启");
+				//3 如果发生异常，异步定时再次推送
+				logger.info("##接受执收单位应答异常:"+e.getMessage());
 				sendDataRepeat(text,map,notifyURL);
 			}
 			message.acknowledge();

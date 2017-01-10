@@ -185,4 +185,16 @@ public interface PayDAO {
 	 * @return
 	 */
 	public int getCount(Map<String,Object> paramsMap);
+	/**
+	 * 获取页面返回地址
+	 * @param orderId
+	 * @return
+	 */
+	public String getReturnUrlByOrderId(String orderId);
+	/**
+	 * 获取后台返回地址
+	 * @param orderId
+	 * @return
+	 */
+	public String getNotifyUrlByOrderId(String orderId);
 }

@@ -1,6 +1,9 @@
 package heb.pay.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.apache.commons.io.IOUtils;
 
@@ -17,6 +20,20 @@ public class FileUtil {
 		} finally {
 			IOUtils.closeQuietly(in);
 		}
+	}
+	
+	public static String inputStream2String(InputStream is) {
+		BufferedReader in = new BufferedReader(new InputStreamReader(is));
+		StringBuffer buffer = new StringBuffer();
+		String line = "";
+		try {
+			while ((line = in.readLine()) != null) {
+				buffer.append(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return buffer.toString();
 	}
 
 }

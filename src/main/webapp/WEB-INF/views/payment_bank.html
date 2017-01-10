@@ -6,11 +6,16 @@
 
 </head>
 <body>
-<form id="info" method="post">
 
+<form id="info" method="post">
+	<#if type == "BOC">
+		<#list data?keys as key> 
+			<input type="hidden" name="${key}" value="${data[key]}"/>
+		</#list>
+	</#if>
 </form>
 <script type="text/javascript">
-document.getElementById("info").action = '${url}';
+document.getElementById("info").action="${url}";
 document.getElementById("info").submit();
 
 </script>

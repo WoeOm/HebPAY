@@ -17,12 +17,12 @@
 	</select>
 	
 	<insert id="insertJfPayorder">
-		insert into t_jfPayorder(ORDERID,ORDERNUM,CANTONID,UNITID,PAYERNAME,PAYERTYPEID,BUSITYPECODE,AMT,CREATEDATE,ORDERSTATE)
+		insert into t_jfPayorder(ORDERID,ORDERNUM,CANTONID,UNITID,PAYERNAME,PAYERTYPEID,BUSITYPECODE,AMT,CREATEDATE)
 		values(sys_guid(),#{0},#{1},#{2},#{3},#{4},#{5},#{6},#{7})
 	</insert>
 	
 	<update id="updateJFOrderBankVSState">
-		update t_jfPayorder set orderstatus = #{2},bankclsid=#{3},eticket=#{4},ismodify=1,issync=1 where unitid=#{0} and ordernum=#{1}
+		update t_jfPayorder set orderstate = #{2},bankclsid=#{3},eticket=#{4},ismodify=1,issync=1 where unitid=#{0} and ordernum=#{1}
 	</update>
 	
 	<select id="getJFBankInfo" resultType="heb.pay.entity.JFBankInfo" parameterType="java.lang.String">
@@ -30,7 +30,7 @@
 	</select>
 	
 	<update id="updateJFOrderStatus">
-		update t_jfpayorder set orderstatus = #{1} where eticket=#{0}
+		update t_jfpayorder set orderstate = #{1} where eticket=#{0}
 	</update>
 	
 </mapper>

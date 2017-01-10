@@ -16,6 +16,7 @@ public class WebUtil {
 	private static Configuration pagecfg = null;
 	private static StringTemplateLoader pageLoader = null;
 	
+	@SuppressWarnings("deprecation")
 	public static void htmlToFreeMarker(HttpServletRequest request,HttpServletResponse response , String html ,String path,Map<String,Object> params ) throws Exception{
 		
 		response.setContentType("text/html; charset=UTF-8");

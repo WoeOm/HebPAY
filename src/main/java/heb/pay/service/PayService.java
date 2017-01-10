@@ -1,6 +1,5 @@
 package heb.pay.service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -186,5 +185,17 @@ public interface PayService {
 	 * @return
 	 */
 	public int getCount(Map<String,Object> paramsMap);
+	/**
+	 * 获取返回页面地址
+	 * @param orderId
+	 * @return
+	 */
+	public String getReturnUrlByOrderId(String orderId);
+	/**
+	 * 获取返回后台地址
+	 * @param orderId
+	 * @return
+	 */
+	public String getNotifyUrlByOrderId(String orderId);
 
 }

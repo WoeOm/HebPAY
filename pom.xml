@@ -249,11 +249,23 @@
 		    <version>2.4</version>
 		    <classifier>jdk15</classifier>
 		</dependency>
+		<!-- banks -->
 		<dependency>
 			<groupId>com.ccb</groupId>
 			<artifactId>netpay</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.boc</groupId>
+			<artifactId>boc-pkcs</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abc</groupId>
+			<artifactId>TrustPayClient</artifactId>
+			<version>3.1.1</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>

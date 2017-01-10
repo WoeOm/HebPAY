@@ -1,6 +1,13 @@
 package heb.pay.manage.quartz;
 
+import heb.pay.service.AutoScanService;
+import heb.pay.service.NotifyService;
+import heb.pay.util.BankConfigUtils;
+import heb.pay.util.BeanUtils;
+import heb.pay.util.CheckBankDataUtils;
+import heb.pay.util.HttpClientUtil;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,24 +16,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import heb.pay.service.AutoScanService;
-import heb.pay.service.NotifyService;
-import heb.pay.util.BeanUtils;
-import heb.pay.util.HttpClientUtil;
-
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.lang.StringUtils;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import com.abc.pay.client.JSON;
+import com.abc.pay.client.ebus.QueryOrderRequest;
+
 public class AutoScanOrder {
 	
-	@Value("${ccbJob}")
+	@Value("${bankJob}")
 	private String jobName;
 	
-	@Value(value = "${ccbGroup}")
+	@Value(value = "${bankGroup}")
 	private String groupName;
 
 	@Autowired     
@@ -55,35 +58,92 @@ public class AutoScanOrder {
 	}
 	
 	public void autoScan(){
-		List<String> paymentOrders = new ArrayList<String>();
-		
+		List<Map<String,Object>> paymentOrders = new ArrayList<Map<String,Object>>();
 		AutoScanService service = (AutoScanService) BeanUtils.getInstance().getBean("autoScanServiceImpl");
-		
 		paymentOrders = service.getAutoScan();
-		
 		for(int i = 0;i<paymentOrders.size();i++){
-			String orderId = paymentOrders.get(i);
+			String orderId = paymentOrders.get(i).get("BANK_ORDER_NO").toString();
+			String payWayCode=paymentOrders.get(i).get("PAY_WAY_CODE").toString();
+			String merchantNo=paymentOrders.get(i).get("MERCHANT_NO").toString();//商户编号
+			String orderNo=paymentOrders.get(i).get("MERCHANT_ORDER_NO").toString();//商户订单号
 			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("requestXml", getXML(orderId));
-			try {
-				String result = HttpClientUtil.doPost("http://localhost:8888/", map, "UTF-8");
-				String status = StringUtils.substringBetween(result, "<ORDER_STATUS>", "</ORDER_STATUS>");
-				if(status != null){
+			//建行BBC_BANK
+			if(payWayCode.equals("CCB-BANK")){
+				map.put("requestXml", getXML(orderId,payWayCode));
+				try {
+					String result = HttpClientUtil.doPost("http://localhost:8888/", map, "UTF-8");
+					String status = StringUtils.substringBetween(result, "<ORDER_STATUS>", "</ORDER_STATUS>");
+					if(status != null){
+						LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
+						link.put("ORDERID", orderId);
+						link.put("SUCCESS", status);
+						notifyService.notice(link, 1,"ccb");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			//中行BOC-BANK
+			if(payWayCode.equals("BOC-BANK")){
+			      StringBuilder plainTextBuilder = new StringBuilder();
+			      plainTextBuilder.append(merchantNo).append(":")
+			        .append(orderNo);
+			      String plainText = plainTextBuilder.toString();
+			      byte[] plainTextByte=null;
+				try {
+					plainTextByte = plainText.getBytes("UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			      String signData = CheckBankDataUtils.bocEncode(plainTextByte);
+			      map.put("merchantNo", merchantNo);
+			      map.put("orderNo", orderNo);
+			      map.put("signData", signData);
+			      try {
+					String result = HttpClientUtil.doPost(BankConfigUtils.bankConfig.get("BOC-BANK-SCAN"), map, "UTF-8");
+					String status = StringUtils.substringBetween(result, "<tranStauts>", "</tranStauts>");
+					if(result!=null){
+						LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
+						link.put("ORDERID", orderId);
+						link.put("SUCCESS", status);
+						notifyService.notice(link, 1,"boc");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			//农行
+			if(payWayCode.equals("ABC-BANK")){
+				String payTypeID = "ImmediatePay";
+				String queryTpye = "0";
+				if(queryTpye.equals("0")){
+					queryTpye = "false";
+				}else if (queryTpye.equals("1")){
+					queryTpye="true";
+				}
+
+				QueryOrderRequest tQueryRequest = new QueryOrderRequest();
+				tQueryRequest.queryRequest.put("PayTypeID", payTypeID);    //设定交易类型
+				tQueryRequest.queryRequest.put("OrderNo",orderNo);    //设定订单编号 （必要信息）
+				tQueryRequest.queryRequest.put("QueryDetail", queryTpye);//设定查询方式
+				JSON json = tQueryRequest.postRequest();
+
+				String status = json.GetKeyValue("ReturnCode");
+				String ErrorMessage = json.GetKeyValue("ErrorMessage");
+				if (status !=null)
+				{
 					LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
 					link.put("ORDERID", orderId);
 					link.put("SUCCESS", status);
-					
-					notifyService.notice(link, 1);
+					notifyService.notice(link, 1,"abc");
 				}
-				
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 	}
 	
-	public static String getXML(String orderId){
+	public static String getXML(String orderId,String payWayCode){
 		StringBuffer buffer = new StringBuffer();
+	 if(payWayCode.equals("CCB-BANK")){
 		buffer.append("<?xml version='1.0' encoding='GB2312' standalone='yes' ?>");
 		buffer.append("<TX>");
 		buffer.append("<REQUEST_SN>"+new SimpleDateFormat("yyyyMMddhhmmss").format(new Date())+"</REQUEST_SN>");
@@ -110,11 +170,13 @@ public class AutoScanOrder {
 		buffer.append("<STATUS>3</STATUS>");
 		buffer.append("</TX_INFO>");
 		buffer.append("</TX>");
+	 }
+	 
 		return buffer.toString();
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(getXML("20161227221830"));
+		System.out.println(getXML("20161227221830",""));
 	}
 	
 }

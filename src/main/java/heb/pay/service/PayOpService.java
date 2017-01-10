@@ -1,6 +1,8 @@
 package heb.pay.service;
 
-import java.util.Date;
+import heb.pay.entity.PaymentOrder;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -14,6 +16,33 @@ public interface PayOpService {
 	 * @return
 	 */
 	public Map<String,Object> checkBaseInfo(String payKey,String payerTypecode,double amt);
+	
+	/**
+	 * 验证支付平台订单是否存在
+	 * @param payerNum
+	 * @param userNo
+	 * @param payerTypeCode
+	 * @param busiTypeCode
+	 * @param amt
+	 * @return
+	 */
+	public Map<String,Object> checkOrderExist(String orderNo,String userNo,String payerTypeCode,String busiTypeCode,double amt);
+	
+	/**
+	 * 银行返回页面通知验证银行数据
+	 * @param params
+	 * @return
+	 */
+	public Map<String, Object> checkBankData(LinkedHashMap<String, String> params,String bankName);
+	
+	/**
+	 * 插入支付平台记录表
+	 * @param payWayCode
+	 * @param payTpyeCode
+	 * @param paymentOrder
+	 * @return
+	 */
+	public Map<String,Object> insertZFOrderRecord(String payWayCode,String payTpyeCode,String returnUrl,String notifyUrl,PaymentOrder paymentOrder);
 
 	/**
 	 * 根据执收单位传入参数信息生成缴费平台订单信息
@@ -25,7 +54,7 @@ public interface PayOpService {
 	 * @param curDate 订单时间
 	 * @return
 	 */
-	public int insertJFPayOrder(String user_no, String orderNo, String payerName,String productName,String busiTypeCode, double amtDate,Date curDate);
+	public int insertPayOrder(PaymentOrder paymentOrder,String payerName);
 	/**
 	 * 更新缴费平台订单表状态
 	 * @param user_no 单位编号
@@ -47,5 +76,19 @@ public interface PayOpService {
 	 * @param jfStatus
 	 */
 	public int updateJFOrderStatus(String orderId,String jfStatus);
+	/**
+	 * 更新订单表状态，支付+缴费
+	 * @param orderId
+	 * @param statusDB
+	 * @return
+	 */
+	public int updateOrderStatus(String orderId, String statusDB);
+	
+	/**
+	 * 根据订单号获取订单信息
+	 * @param orderId
+	 * @return
+	 */
+	public Map<String,Object> getPayOrderByOrderId(String orderId);
 
 }

@@ -50,6 +50,7 @@ public class QuartzManage {
 		return false;    
 	}    
 
+	@SuppressWarnings("unused")
 	private boolean validCronExpression(String cron){
 		return CronExpression.isValidExpression(cron);
 	}

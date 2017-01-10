@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
-   
+
 @Controller
 public class KaptchaController {
 	

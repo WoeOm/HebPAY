@@ -30,12 +30,12 @@
             }
         }
         function changecolor(obj){
-        	/* var bankString = $(obj).attr("name");
+        	var bankString = $(obj).attr("name");
         	$("#bankCode").val(bankString.split(':')[0]);
         	$("#sign").val(bankString.split(':')[1]);
         	$("[id=yhys]").removeClass('bankimg check');
         	$("[id=yhys]").addClass('bankimg');
-        	$(obj).attr("class","bankimg check"); */
+        	$(obj).attr("class","bankimg check");
         }
     	$(document).ready(function(){
     		$("#pay").css("background","#3498db");
@@ -173,7 +173,7 @@
             <a href="javascript:;" id="inforbtn" onclick="showDocumentLink()">订单详情</a>
         </div>
         <div class="pay_list_box" style="display: block;" id="inforbox">
-            <div c3222222222222lass="pay-list-info">
+            <div class="pay-list-info">
                 <span class="mr10"> 订单号：${payerNum}</span><span class="mr10">姓名：${payerName}</span>
             </div>
             <div class="pay-list-info">
@@ -215,24 +215,24 @@
                 <h3>支付方式选择</h3>
             </div>
             <div id="bank" class="pay-tips">请确保您选择的银行卡已开通了网上支付功能，否则将无法支付成功</div>
-            	<div class="bankbox">
+            	<!-- <div class="bankbox">
             		<div class="checkbank">
                			<div id="yhys" class="bankimg check" onclick="changecolor(this)" name="${pwl.bankType}"><img src="${ctx}/static/images/CCB-BANK.png" width="127" height="40" /></div>
            			</div>
-            	</div>
-            	<!-- <#list bankInfo as pwl>
+            	</div> -->
+            	<#list bankInfo as pwl>
 	            	<#if (pwl_index%4) == 0>
 	                	<div class="bankbox">
 					</#if>
-					<#if pwl.bankCode == 'CCB-BANK'>
-				        <div class="checkbank">
-                  			<div id="yhys" class="bankimg check" onclick="changecolor(this)" name="${pwl.bankType}"><img src="${ctx}/static/images/${pwl.bankCode}.png" width="127" height="40" ></div>
-              			</div>
-              		</#if>
+					
+	        		<div class="checkbank">
+               			<div id="yhys" class="bankimg" onclick="changecolor(this)" name="${pwl.bankType}"><img src="${ctx}/static/images/${pwl.bankCode}.png" width="127" height="40" ></div>
+           			</div>
+              		
               		<#if (pwl_index%4) == 3 || pwl_index == (bankInfo?size-1)>
 	                	</div>
 					</#if>
-				</#list> -->
+				</#list>
 				
 	            <div class="check_box"><input id="isAgree" type="checkbox" class="check" checked/>我已阅读相关协议<a href="#">《网上缴费服务协议》</a></div>
 	            <input id="pay" type="button" class="paybtn" value="去支付" />
@@ -241,7 +241,9 @@
     <form id="info" method="post" action="payBank" >
     	<input id="amt" name="amt" type="hidden" value=""/>
     	<input id="busiTypeCode" name="busiTypeCode" type="hidden" value="${busiTypeCode}"/>
-        <#list bankInfo as pwl>
+    	<input id="bankCode" name="payWay" type="hidden" value="${name}" /> 
+    	<input id="sign" name="sign" value="${name}" type="hidden" />
+        <!-- <#list bankInfo as pwl>
 	    	<#if pwl.bankCode == 'CCB-BANK'>
 	    		<#list pwl.bankType?split(':') as name>
 	    		<#if name_index==0>
@@ -252,7 +254,7 @@
 				</#if>
 				</#list>
 	    	</#if>
-    	</#list>
+    	</#list> -->
 	<input id="payerNum" name="payerNum" value="${payerNum}" type="hidden" />
 	<input id="payKey" name="payKey" type="hidden" value="${payKey}"/> 
 	<input id="signType" name="signType" type="hidden" value="MD5"/> 

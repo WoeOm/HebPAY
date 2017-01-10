@@ -146,4 +146,14 @@
 		select * from t_jfpayerType where payerTypeCode = #{productName} and isenable=1
 	</select>
 	
+	<!-- getReturnUrlByOrderId -->
+	<select id="getReturnUrlByOrderId" resultType="java.lang.String" parameterType="java.lang.String">
+		select return_url from hp_trade_payment_record where bank_order_no=#{orderId}
+	</select>
+	
+	<!-- getNotifyUrlByOrderId -->
+	<select id="getNotifyUrlByOrderId" resultType="java.lang.String" parameterType="java.lang.String">
+		select notify_url from hp_trade_payment_record where bank_order_no=#{orderId}
+	</select>
+	
 </mapper>

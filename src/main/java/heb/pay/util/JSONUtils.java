@@ -11,7 +11,8 @@ import net.sf.json.JsonConfig;
 
 public class JSONUtils {
 
-    public static Map<String, Object> jsonToMap(String jsonString){ 
+    @SuppressWarnings("unchecked")
+	public static Map<String, Object> jsonToMap(String jsonString){ 
     	
     	if (jsonString == null || "".equals(jsonString)) { 
     		return null; 
@@ -30,7 +31,8 @@ public class JSONUtils {
     	return retMap; 
     } 
 
-    public static List<Map<String, Object>> jsonToList(String jsonString){
+    @SuppressWarnings("unchecked")
+	public static List<Map<String, Object>> jsonToList(String jsonString){
     	    	
     	if (jsonString == null || "".equals(jsonString)) { 
     		return null; 

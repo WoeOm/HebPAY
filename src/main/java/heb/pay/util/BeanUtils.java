@@ -37,6 +37,7 @@ public class BeanUtils implements ApplicationContextAware {
       return applicationContext.getBean(type);
     }
 
+	@SuppressWarnings("static-access")
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
