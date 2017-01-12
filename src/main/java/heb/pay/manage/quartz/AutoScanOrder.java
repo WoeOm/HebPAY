@@ -6,8 +6,6 @@ import heb.pay.util.BankConfigUtils;
 import heb.pay.util.BeanUtils;
 import heb.pay.util.CheckBankDataUtils;
 import heb.pay.util.HttpClientUtil;
-
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,12 +13,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import com.abc.pay.client.JSON;
 import com.abc.pay.client.ebus.QueryOrderRequest;
 
@@ -28,16 +24,13 @@ public class AutoScanOrder {
 	
 	@Value("${bankJob}")
 	private String jobName;
-	
 	@Value(value = "${bankGroup}")
 	private String groupName;
 
 	@Autowired     
 	private QuartzManage quartzManage;
-	
 	@Autowired
 	private NotifyService notifyService;
-	
 	@Autowired
 	private AutoScanService autoScanService;
 	
@@ -66,9 +59,9 @@ public class AutoScanOrder {
 			String orderId = paymentOrders.get(i).get("BANK_ORDER_NO").toString();
 			String payWayCode = paymentOrders.get(i).get("PAY_WAY_CODE").toString();
 			String merchantNo = paymentOrders.get(i).get("MERCHANT_NO").toString();//商户编号
-			Map<String, Object> map = new HashMap<String, Object>();
 			
 			if(payWayCode.equals("CCB-BANK")){//建行BBC_BANK
+				Map<String, Object> map = new HashMap<String, Object>();
 				map.put("requestXml", getXML(orderId,payWayCode));
 				try {
 					String result = HttpClientUtil.doPost("http://localhost:8888/", map, "UTF-8");
@@ -83,20 +76,18 @@ public class AutoScanOrder {
 					e.printStackTrace();
 				}
 			}else if(payWayCode.equals("BOC-BANK")){//中行BOC-BANK
-			      StringBuilder plainTextBuilder = new StringBuilder();
-			      plainTextBuilder.append(merchantNo).append(":").append(orderId);
-			      String plainText = plainTextBuilder.toString();
-			      byte[] plainTextByte=null;
+				Map<String, Object> map = new HashMap<String, Object>();
+				StringBuilder plainTextBuilder = new StringBuilder();
+				plainTextBuilder.append(merchantNo).append(":").append(orderId);
+				String plainText = plainTextBuilder.toString();
+				byte[] plainTextByte=null;
 				try {
 					plainTextByte = plainText.getBytes("UTF-8");
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
-			      String signData = CheckBankDataUtils.bocEncode(plainTextByte);
-			      map.put("merchantNo", merchantNo);
-			      map.put("orderNo", orderId);
-			      map.put("signData", signData);
-			      try {
+				
+					String signData = CheckBankDataUtils.bocEncode(plainTextByte);
+					map.put("merchantNo", merchantNo);
+					map.put("orderNo", orderId);
+					map.put("signData", signData);
 					String result = HttpClientUtil.doPost(BankConfigUtils.bankConfig.get("BOC-BANK-SCAN"), map, "UTF-8");
 					String status = StringUtils.substringBetween(result, "<tranStauts>", "</tranStauts>");
 					if(result!=null){
@@ -109,22 +100,27 @@ public class AutoScanOrder {
 					e.printStackTrace();
 				}
 			}else if(payWayCode.equals("ABC-BANK")){//农行
-				QueryOrderRequest queryRequest = new QueryOrderRequest();
-				queryRequest.queryRequest.put("PayTypeID", "ImmediatePay");    //设定交易类型
-				queryRequest.queryRequest.put("OrderNo",orderId);    //设定订单编号 （必要信息）
-				queryRequest.queryRequest.put("QueryDetail", "false");//设定查询方式
-				JSON json = queryRequest.postRequest();
-				String returnCode = json.GetKeyValue("ReturnCode");
-				//String ErrorMessage = json.GetKeyValue("ErrorMessage");
-				LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
-				if (returnCode.equals("0000")){
-					link.put("orderNo", orderId);
-					link.put("orderStatus", "1");
-				}else{
-					link.put("orderNo", orderId);
-					link.put("orderStatus", "0");
+				try {
+					QueryOrderRequest queryRequest = new QueryOrderRequest();
+					queryRequest.queryRequest.put("PayTypeID", "ImmediatePay");    //设定交易类型
+					queryRequest.queryRequest.put("OrderNo",orderId);    //设定订单编号 （必要信息）
+					queryRequest.queryRequest.put("QueryDetail", "false");//设定查询方式
+					JSON json = queryRequest.postRequest();
+					String returnCode = json.GetKeyValue("ReturnCode");
+					//String ErrorMessage = json.GetKeyValue("ErrorMessage");
+					LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
+					if (returnCode.equals("0000")){
+						link.put("orderNo", orderId);
+						link.put("orderStatus", "1");
+					}else{
+						link.put("orderNo", orderId);
+						link.put("orderStatus", "0");
+					}
+					notifyService.notice(link, 1,"abc");
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				notifyService.notice(link, 1,"abc");
+				
 			}
 		}
 	}

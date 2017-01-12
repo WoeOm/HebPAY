@@ -91,7 +91,7 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			para.setMerchantCertPasswordList(iMerchantPasswordList);
 
 			//#交易日志文件存放目录
-			para.setLogPath("./logs");
+			para.setLogPath(CheckBankDataUtils.getABCCertPath()+"/logs");
 			//#证书储存媒体
 			para.setMerchantKeyStoreType("0");
 			

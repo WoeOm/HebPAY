@@ -51,6 +51,7 @@ public class PayController {
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/pay/inpay")
 	public ModelAndView doPayIn(HttpServletRequest request,HttpServletResponse response, ModelAndView model){
+		logger.info("##进入支付选择页面……");
 		//获取参数信息
 		Map<String,Object> params = PageUtils.getParameters(request);
 		logger.info(params.toString());
@@ -213,6 +214,7 @@ public class PayController {
 	
 	@RequestMapping(value="/pay/orderQuery")///pay/orderQuery
 	public void orderQuery(HttpServletRequest request,HttpServletResponse response){
+		logger.info("##执收单位查询订单信息……");
 		Map<String,Object> params = PageUtils.getParameters(request);
 		logger.info(params.toString());
 		String payKey = params.get("payKey")==null?"":params.get("payKey").toString();
@@ -301,7 +303,7 @@ public class PayController {
 	
 	@RequestMapping(value="/paynotify/return/{bank}")
 	public ModelAndView getReturn(@PathVariable String bank,HttpServletRequest request,HttpServletResponse response,ModelAndView model){
-		logger.info("##进入return……");
+		logger.info("##进入页面通知……");
 		LinkedHashMap<String,String> params = new LinkedHashMap<String, String>();
 		//1 获取银行页面通知参数
 		Map<String,Object> checkBankData = null;
@@ -321,22 +323,22 @@ public class PayController {
 			String errorRet = checkBankData.get("error").toString();
 			switch (errorRet) {
 			case "no_unit":
-				model.addObject("errorCode", "ERROR78394738849372");
+				model.addObject("errorCode", "1301");
 				model.addObject("errorInfo", "执收单位不存在！");
 				model.setViewName("payment_defeat");
 				break;
 			case "vail_error":
-				model.addObject("errorCode", "ERROR11103909018290");
+				model.addObject("errorCode", "1302");
 				model.addObject("errorInfo", "数据校验失败！");
 				model.setViewName("payment_defeat");
 				break;
 			case "no_order":
-				model.addObject("errorCode", "ERROR38784801283901");
+				model.addObject("errorCode", "1303");
 				model.addObject("errorInfo", "订单号不存在！");
 				model.setViewName("payment_defeat");
 				break;
 			case "no_pay_type":
-				model.addObject("errorCode", "ERROR10893340908001");
+				model.addObject("errorCode", "1304");
 				model.addObject("errorInfo", "缴费类型不存在！");
 				model.setViewName("payment_defeat");
 				break;
@@ -397,13 +399,13 @@ public class PayController {
 			notifyService.notice(params,0,bank);
 		}
 		
-		logger.info("##页面推送URL："+model.getViewName());
+		logger.info("##执收单位页面推送地址："+model.getViewName());
 		return model;
 	}
 
 	@RequestMapping(value="/paynotify/notify/{bank}")
 	public void getNotify(@PathVariable String bank,HttpServletRequest request,HttpServletResponse response){
-		logger.info("##进入notify……");
+		logger.info("##进入服务通知……");
 		LinkedHashMap<String,String> params = PageUtils.getLinkedParameters(request);
 		notifyService.notice(params,0,bank);
 		

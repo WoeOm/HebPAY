@@ -1,0 +1,159 @@
+create table HP_MERCHANT_INFO
+(
+  id        VARCHAR2(50) not null,
+  user_no   VARCHAR2(50) not null,
+  user_name VARCHAR2(50),
+  status    VARCHAR2(50) default 0
+)
+tablespace HEBPAY
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+-- Add comments to the table 
+comment on table HP_MERCHANT_INFO
+  is '商户信息表';
+-- Add comments to the columns 
+comment on column HP_MERCHANT_INFO.id
+  is '主键';
+comment on column HP_MERCHANT_INFO.user_no
+  is '商户内码编号';
+comment on column HP_MERCHANT_INFO.user_name
+  is '商户内码名称';
+comment on column HP_MERCHANT_INFO.status
+  is '状态';
+
+
+  create table HP_MERCHANT_PAY_CONFIG
+(
+  id           VARCHAR2(50) not null,
+  version      INTEGER default 0 not null,
+  creator      VARCHAR2(50),
+  create_time  TIMESTAMP(6) default sysdate not null,
+  modificator  VARCHAR2(50),
+  modify_time  TIMESTAMP(6),
+  status       VARCHAR2(20) not null,
+  product_code VARCHAR2(50) not null,
+  product_name VARCHAR2(200) not null,
+  pay_key      VARCHAR2(50) not null,
+  pay_secret   VARCHAR2(50) not null,
+  user_no      VARCHAR2(50) not null
+)
+tablespace HEBPAY
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+-- Add comments to the table 
+comment on table HP_MERCHANT_PAY_CONFIG
+  is '商户支付配置表';
+-- Add comments to the columns 
+comment on column HP_MERCHANT_PAY_CONFIG.id
+  is '主键';
+comment on column HP_MERCHANT_PAY_CONFIG.version
+  is '版本';
+comment on column HP_MERCHANT_PAY_CONFIG.creator
+  is '创建人';
+comment on column HP_MERCHANT_PAY_CONFIG.create_time
+  is '创建时间';
+comment on column HP_MERCHANT_PAY_CONFIG.modificator
+  is '修改人';
+comment on column HP_MERCHANT_PAY_CONFIG.modify_time
+  is '修改时间';
+comment on column HP_MERCHANT_PAY_CONFIG.status
+  is '支付状态';
+comment on column HP_MERCHANT_PAY_CONFIG.product_code
+  is '产品编码';
+comment on column HP_MERCHANT_PAY_CONFIG.product_name
+  is '订单产品名称';
+comment on column HP_MERCHANT_PAY_CONFIG.pay_key
+  is '缴费平台发放支付单位标识';
+comment on column HP_MERCHANT_PAY_CONFIG.pay_secret
+  is '缴费平台发放支付单位秘钥';
+comment on column HP_MERCHANT_PAY_CONFIG.user_no
+  is '商户编号内码';
+
+
+
+
+create table HP_MERCHANT_PAY_INFO
+(
+  id                 VARCHAR2(50) not null,
+  version            NUMBER default 0 not null,
+  creator            VARCHAR2(50),
+  create_time        TIMESTAMP(6) default sysdate not null,
+  modificator        VARCHAR2(50),
+  modify_time        TIMESTAMP(6),
+  user_no            VARCHAR2(50) not null,
+  pay_way_code       VARCHAR2(50) not null,
+  pay_way_name       VARCHAR2(200) not null,
+  tg_rsa_private_key VARCHAR2(1000),
+  tg_rsa_public_key  VARCHAR2(1000),
+  status             VARCHAR2(20) default 0 not null,
+  tg_merchant_id     VARCHAR2(50),
+  tg_merchant_id2    VARCHAR2(50),
+  tg_merchant_id3    VARCHAR2(50),
+  tg_partner_key     VARCHAR2(50),
+  tg_partner_secret  VARCHAR2(50)
+)
+tablespace HEBPAY
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+-- Add comments to the table 
+comment on table HP_MERCHANT_PAY_INFO
+  is '商户支付配置信息表';
+-- Add comments to the columns 
+comment on column HP_MERCHANT_PAY_INFO.id
+  is '主键';
+comment on column HP_MERCHANT_PAY_INFO.version
+  is '版本号';
+comment on column HP_MERCHANT_PAY_INFO.creator
+  is '创建人';
+comment on column HP_MERCHANT_PAY_INFO.create_time
+  is '创建时间';
+comment on column HP_MERCHANT_PAY_INFO.modificator
+  is '修改人';
+comment on column HP_MERCHANT_PAY_INFO.modify_time
+  is '修改时间';
+comment on column HP_MERCHANT_PAY_INFO.user_no
+  is '商户内码';
+comment on column HP_MERCHANT_PAY_INFO.pay_way_code
+  is '支付方式编号';
+comment on column HP_MERCHANT_PAY_INFO.pay_way_name
+  is '支付方式名称';
+comment on column HP_MERCHANT_PAY_INFO.tg_rsa_private_key
+  is '第三方支付提供私钥（加密存储）';
+comment on column HP_MERCHANT_PAY_INFO.tg_rsa_public_key
+  is '第三方支付提供公钥（加密存储）';
+comment on column HP_MERCHANT_PAY_INFO.status
+  is '启用状态';
+comment on column HP_MERCHANT_PAY_INFO.tg_merchant_id
+  is '第三方支付商户标识1';
+comment on column HP_MERCHANT_PAY_INFO.tg_merchant_id2
+  is '第三方支付商户标识2';
+comment on column HP_MERCHANT_PAY_INFO.tg_merchant_id3
+  is '第三方支付商户标识3';
+comment on column HP_MERCHANT_PAY_INFO.tg_partner_key
+  is '第三方支付商户KEY';
+comment on column HP_MERCHANT_PAY_INFO.tg_partner_secret
+  is '第三方支付商户SECRET';

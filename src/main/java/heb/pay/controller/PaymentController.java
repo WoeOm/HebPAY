@@ -248,7 +248,7 @@ public class PaymentController {
 			paymentRequest.dicOrder.put("CurrencyCode", "156");
 			paymentRequest.dicOrder.put("OrderAmount", orderAmount);
 			paymentRequest.dicOrder.put("InstallmentMark", "0");
-			paymentRequest.dicOrder.put("CommodityType", "0499"); 
+			paymentRequest.dicOrder.put("CommodityType", "0202"); 
 			//3、生成支付请求对象
 			paymentRequest.dicRequest.put("PaymentType", "1"); //设定支付类型
 			paymentRequest.dicRequest.put("PaymentLinkType", "1");//1：internet网络接入

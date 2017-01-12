@@ -37,6 +37,7 @@ public class NotifyServiceImpl implements NotifyService {
 
 	@Override
 	public void notice(LinkedHashMap<String, String> params, int type,String bankName) {
+		logger.info("##进入服务通知（notify）……");
 		ModelAndView model = new ModelAndView();
 		List<MerchantPayInfo> merPayInfoList = null;
 		
@@ -104,7 +105,7 @@ public class NotifyServiceImpl implements NotifyService {
 						status = "0";
 						upStatus = "FAILED";
 					}
-					orderNo = paymentResult.getValue("OrderNO");
+					orderNo = paymentResult.getValue("OrderNo");
 				} catch (TrxException e) {
 					e.printStackTrace();
 				}
@@ -157,7 +158,6 @@ public class NotifyServiceImpl implements NotifyService {
 			}
 		}
 		
-		
 		//1.2更新订单表状态
 		if(!statusDB.equals("SUCCESS")){
 			int ret = payOpService.updateOrderStatus(orderNo,upStatus);
@@ -199,6 +199,7 @@ public class NotifyServiceImpl implements NotifyService {
 		map.put("sign", sign);
 		model.addObject("signType", "MD5");
 		map.put("signType", "MD5");
+		logger.info("##服务端通知通过JMS发送……");
 		queueSender.send(JSONUtils.mapToJson(map));
 	}
 

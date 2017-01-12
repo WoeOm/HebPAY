@@ -8,18 +8,15 @@ import heb.pay.service.PayService;
 import heb.pay.util.HttpClientUtil;
 import heb.pay.util.JSONUtils;
 import heb.pay.util.PageUtils;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
-
 import org.apache.log4j.Logger;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,25 +36,25 @@ public class QueueReciver implements MessageListener{
 
 	@Override
 	public void onMessage(Message message) {
-		logger.info("##进入JMS……");
+		logger.info("##进入JMS接收……");
 		try {
 			//1 接收执收单位推送数据
 			String text = ((TextMessage)message).getText();
 			Map<String,Object> map =  JSONUtils.jsonToMap(text);
 			//获取执收单位推送后台地址
 			String notifyURL = payService.getNotifyURLByOrderNum(map.get("payKey").toString(),map.get("payerNum").toString());
-			logger.info("##后台推送URL："+notifyURL);
+			logger.info("##执收单位服务推送地址："+notifyURL);
 			try {
 				//2 推送并等待结果
 				String result = HttpClientUtil.doPost(notifyURL, map, "UTF-8");
 				//3 如果result不符合要求即不为"SUCCESS"，异步定时再次推送
 				if(!result.equals("SUCCESS")){
+					logger.info("##【无回应】再次推送……");
 					sendDataRepeat(text,map,notifyURL);
 				}
-				
 			} catch (Exception e) {
 				//3 如果发生异常，异步定时再次推送
-				logger.info("##接受执收单位应答异常:"+e.getMessage());
+				logger.info("##【异常】再次推送……");
 				sendDataRepeat(text,map,notifyURL);
 			}
 			message.acknowledge();
@@ -68,6 +65,7 @@ public class QueueReciver implements MessageListener{
 	}
 	
 	private void sendDataRepeat(String text,Map<String,Object> map,String notifyURL){
+		logger.info("##开始推送……");
 		List<MerchantInfo> list = payService.getMerchantInfo(map.get("payKey").toString());
 		Map<String,Object> paramsMap = new HashMap<String, Object>();
 		paramsMap.put("user_no", list.get(0).getUser_no());
@@ -111,7 +109,6 @@ public class QueueReciver implements MessageListener{
 				qurtBean.setMethodName("send");
 				qurtBean.setParams(new Object[]{text});
 				String cronExpression = format.format(c.getTime());
-				logger.info(cronExpression + ":正在向执收单位推送结果数据....");
 				qurtBean.setCronExpression(cronExpression);
 				try {
 					quartzManage.addJob(qurtBean);
@@ -124,5 +121,14 @@ public class QueueReciver implements MessageListener{
 			return;
 		}
 		
+	}
+	
+	public static void main(String[] args) {
+		Calendar c = Calendar.getInstance();
+		Date now = new Date();
+		c.setTime(now);
+		SimpleDateFormat format = new SimpleDateFormat("s m H d M ? yyyy");
+		String cronExpression = format.format(c.getTime());
+		System.out.println(cronExpression);
 	}
 }
