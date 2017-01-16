@@ -1,5 +1,19 @@
 package heb.pay.controller;
 
+import heb.pay.entity.MerchantInfo;
+import heb.pay.entity.MerchantPayInfo;
+import heb.pay.entity.PaymentOrder;
+import heb.pay.entity.User;
+import heb.pay.service.JFUserService;
+import heb.pay.service.PayBaseService;
+import heb.pay.service.PayCenterService;
+import heb.pay.service.PaymentService;
+import heb.pay.util.AESUtils;
+import heb.pay.util.BankConfigUtils;
+import heb.pay.util.CheckBankDataUtils;
+import heb.pay.util.MD5Util;
+import heb.pay.util.PageUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -7,20 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import heb.pay.entity.MerchantInfo;
-import heb.pay.entity.MerchantPayInfo;
-import heb.pay.entity.PaymentOrder;
-import heb.pay.entity.User;
-import heb.pay.service.PayOpService;
-import heb.pay.service.PayService;
-import heb.pay.service.PaymentService;
-import heb.pay.service.UserService;
-import heb.pay.util.AESUtils;
-import heb.pay.util.BankConfigUtils;
-import heb.pay.util.CheckBankDataUtils;
-import heb.pay.util.MD5Util;
-import heb.pay.util.PageUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,28 +35,31 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.abc.pay.client.JSON;
 import com.abc.pay.client.ebus.PaymentRequest;
-
+import com.csii.payment.client.entity.SignParameterObject;
 
 @Controller
 public class PaymentController {
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
+	
+	public static MerchantPayInfo merchantPayInfo = null;
 
 	@Autowired
-	private PayService payService;
+	private PayCenterService payCenterService;
 	
 	@Autowired
 	private PaymentService paymentService;
 	
 	@Autowired
-	private PayOpService payOpService;
+	private PayBaseService payBaseService;
 	
 	@Autowired
-	private UserService userservice;
+	private JFUserService jfUserservice;
 	
 	@SuppressWarnings({ "unchecked"})
 	@RequestMapping(value="/pay/payBank")
 	public ModelAndView doPayBank(HttpServletRequest request,HttpServletResponse response,ModelAndView model){
+		logger.info("##进入银行页面……");
 		Map<String,Object> params = PageUtils.getParameters(request);
 		String payerNum = params.get("payerNum")==null?"":params.get("payerNum").toString();
 		String payWayStr = params.get("payWay")==null?"":params.get("payWay").toString();
@@ -67,7 +70,7 @@ public class PaymentController {
 		String busiTypeCode = params.get("busiTypeCode")==null?"":params.get("busiTypeCode").toString();
 		double amt = params.get("amt")==null?0:Double.parseDouble(params.get("amt").toString());
 		//验证数据
-		Map<String,Object> retMap = payOpService.checkBaseInfo(payKey, payerTypeCode, amt);
+		Map<String,Object> retMap = payBaseService.checkBaseInfo(payKey, payerTypeCode, amt);
 		if(retMap.containsKey("error")){
 			String error = retMap.get("error").toString();
 			switch (error) {
@@ -105,7 +108,7 @@ public class PaymentController {
 		model.addObject("merchantName",merchantInfo.getUser_name());
 		
 		//验证订单有效性
-		Map<String,Object> orderRetMap = payOpService.checkOrderExist(payerNum, merchantInfo.getUser_no(), payerTypeCode, busiTypeCode, amt);
+		Map<String,Object> orderRetMap = payBaseService.checkOrderExist(payerNum, merchantInfo.getUser_no(), payerTypeCode, busiTypeCode, amt);
 		if(orderRetMap.containsKey("error")){
 			String error = orderRetMap.get("error").toString();
 			switch (error) {
@@ -132,32 +135,30 @@ public class PaymentController {
 			}
 			return model;
 		}
-		String returnUrl = BankConfigUtils.bankConfig.get("returnUrl");
-		String notifyUrl = BankConfigUtils.bankConfig.get("notifyUrl");
-		if(payWayCode.equals("CCB-BANK")){
-			returnUrl += "ccb";
-			notifyUrl += "ccb";
-		}else if(payWayCode.equals("BOC-BANK")){
-			returnUrl += "boc";
-			notifyUrl += "boc";
-		}else if(payWayCode.equals("ABC-BANK")){
-			returnUrl += "abc";
-			notifyUrl += "abc";
+		
+		String bank = payWayCode.split("-")[0].toLowerCase();
+		if(bank == null || bank.equals("")){
+			model.addObject("errorCode", "1201");
+			model.addObject("errorInfo", "订单选择的银行信息丢失");
+			model.setViewName("payment_defeat");
+			return model;
 		}
+		String returnUrl = BankConfigUtils.bankConfig.get("returnUrl") + bank;
+		String notifyUrl = BankConfigUtils.bankConfig.get("notifyUrl") + bank;
 		
 		PaymentOrder paymentOrder = (PaymentOrder)orderRetMap.get("paymentOrder");
 		// 插入订单记录表
-		Map<String,Object> recordRetMap = payOpService.insertZFOrderRecord(payWayCode, payTpyeCode,returnUrl,notifyUrl, paymentOrder);
+		Map<String,Object> recordRetMap = payBaseService.insertZFOrderRecord(payWayCode, payTpyeCode,returnUrl,notifyUrl, paymentOrder);
 		if(recordRetMap.containsKey("error")){
-			model.addObject("errorCode", "1201");
+			model.addObject("errorCode", "1202");
 			model.addObject("errorInfo", "订单（"+ payerNum +"）创建支付记录信息失败，请重新支付");
 			model.setViewName("payment_defeat");
 			return model;
 		}
 		//获取支付信息
-		List<MerchantPayInfo> mPayInfoList = payService.getMerchantPayInfo(paymentOrder.getMerchant_no(),payWayCode);
-		if(mPayInfoList == null || mPayInfoList.size()<=0){
-			model.addObject("errorCode", "1202");
+		merchantPayInfo = payCenterService.getMerchantPayInfo(paymentOrder.getMerchant_no(),payWayCode);
+		if(merchantPayInfo == null){
+			model.addObject("errorCode", "1203");
 			model.addObject("errorInfo", "此执收单位下无可用银行信息");
 			model.setViewName("payment_defeat");
 			return model;
@@ -171,19 +172,19 @@ public class PaymentController {
 		if(payWayCode.equals("CCB-BANK")){//建行
 			url = BankConfigUtils.bankConfig.get("CCB-BANK");
 			originalStr = new StringBuilder();
-			url += "MERCHANTID="+mPayInfoList.get(0).getTg_merchant_id();
-			originalStr.append("MERCHANTID=").append(mPayInfoList.get(0).getTg_merchant_id());
-			originalStr.append("&POSID=").append(mPayInfoList.get(0).getTg_merchant_id2());
-			url += "&POSID=" + mPayInfoList.get(0).getTg_merchant_id2();
-			originalStr.append("&BRANCHID=").append(mPayInfoList.get(0).getTg_merchant_id3());
-			url += "&BRANCHID=" + mPayInfoList.get(0).getTg_merchant_id3();
+			url += "MERCHANTID="+merchantPayInfo.getTg_merchant_id();
+			originalStr.append("MERCHANTID=").append(merchantPayInfo.getTg_merchant_id());
+			originalStr.append("&POSID=").append(merchantPayInfo.getTg_merchant_id2());
+			url += "&POSID=" + merchantPayInfo.getTg_merchant_id2();
+			originalStr.append("&BRANCHID=").append(merchantPayInfo.getTg_merchant_id3());
+			url += "&BRANCHID=" + merchantPayInfo.getTg_merchant_id3();
 			originalStr.append("&ORDERID=").append(recordRetMap.get("bankOrderNo").toString());
 			url += "&ORDERID=" + recordRetMap.get("bankOrderNo").toString();
 			originalStr.append("&PAYMENT=").append(amt);
 			url += "&PAYMENT=" + amt;
 			originalStr.append("&CURCODE=01&TXCODE=520100&REMARK1=&REMARK2=&TYPE=1");
 			url += "&CURCODE=01&TXCODE=520100&REMARK1=&REMARK2=&TYPE=1";
-			String PUB = mPayInfoList.get(0).getTg_partner_secret();
+			String PUB = merchantPayInfo.getTg_partner_secret();
 			originalStr.append("&PUB=").append(PUB);
 			originalStr.append("&GATEWAY=");
 			url += "&GATEWAY=&CLIENTIP=&REGINFO=&PROINFO=&REFERER=";
@@ -204,7 +205,7 @@ public class PaymentController {
 			String orderTime = format.format(paymentOrder.getCreate_time());
 			String curCode = "001";
 			String orderAmount = df.format(amt);
-			String merchantNo = mPayInfoList.get(0).getTg_merchant_id();
+			String merchantNo = merchantPayInfo.getTg_merchant_id();
 			Map<String,Object> paramsMap = new LinkedHashMap<String, Object>();
 			paramsMap.put("merchantNo",merchantNo);
 			paramsMap.put("payType",1);
@@ -220,7 +221,6 @@ public class PaymentController {
 			originalStr.append(curCode).append("|");
 			originalStr.append(orderAmount).append("|");
 			originalStr.append(merchantNo);
-			logger.info(originalStr);
 			String signData = "";
 			try {
 				signData = CheckBankDataUtils.bocEncode(originalStr.toString().getBytes("UTF-8"));
@@ -270,6 +270,51 @@ public class PaymentController {
 				model.setViewName("payment_defeat");
 			}
 			model.addObject("type","ABC");
+		}else if(payWayCode.equals("CEB-BANK")){//光大
+			url = BankConfigUtils.bankConfig.get("CEB-BANK");
+			originalStr = new StringBuilder();
+			
+			String orderNo = recordRetMap.get("bankOrderNo").toString();
+			String orderTime = format.format(paymentOrder.getCreate_time());
+			String curCode = "01";
+			String orderAmount = df.format(amt);
+			String merchantNo = merchantPayInfo.getTg_merchant_id();
+			String TransName = "IPER";
+			
+			originalStr.append("transId="+TransName+"~|~");
+			originalStr.append("merchantId="+merchantNo+"~|~");
+			originalStr.append("orderId="+orderNo+"~|~");
+			originalStr.append("transAmt="+orderAmount+"~|~");
+			originalStr.append("transDateTime="+orderTime+"~|~");
+			originalStr.append("currencyType="+curCode+"~|~");
+			originalStr.append("customerName=~|~");
+			originalStr.append("merSecName=~|~");
+			originalStr.append("productInfo=~|~");
+			originalStr.append("customerEmail=~|~");
+			originalStr.append("merURL="+notifyUrl+"~|~");
+			originalStr.append("merURL1="+returnUrl+"~|~");
+			originalStr.append("payIp=~|~");
+			originalStr.append("msgExt=");
+			
+			String plain = originalStr.toString();
+			
+			SignParameterObject signParam = new SignParameterObject();
+			signParam.setMerchantId(merchantNo);//商户号
+			signParam.setPlain(plain);//明文
+			signParam.setCharset("GBK");//明文使用的字符集
+			signParam.setType(0);//0-普通报文
+			signParam.setAlgorithm("MD5withRSA");//签名算法
+			
+			String signature = CheckBankDataUtils.cebEncode(signParam);
+			Map<String,Object> paramsMap = new LinkedHashMap<String, Object>();
+			paramsMap.put("Plain", plain);
+			paramsMap.put("TransName", TransName);
+			paramsMap.put("Signature", signature);
+			
+			model.addObject("data",paramsMap);
+			model.addObject("url", url);
+			model.setViewName("payment_bank");
+			model.addObject("type","CEB");
 		}
 		
 		return model;
@@ -314,14 +359,14 @@ public class PaymentController {
  		
  		//预留接口
  		if(mbcke!=null  && mbcke!=""){
- 			List<User> user = userservice.getUserBymb(AESUtils.Encode(mb));
+ 			List<User> user = jfUserservice.getUserBymb(AESUtils.Encode(mb));
  	 		if(user!=null && user.size()==0){
  	 			
  	 			Map<String,String> userMap = new HashMap<String, String>();
  				userMap.put("userid", PageUtils.getUUID());
  				userMap.put("mb", AESUtils.Encode(mb));
  				userMap.put("usertype", "3");
- 	 			userservice.insertQuickUser(userMap);
+ 				jfUserservice.insertQuickUser(userMap);
  	 		}
  			
  			listMap.put("code", 1);

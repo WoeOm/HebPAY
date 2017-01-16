@@ -3,8 +3,8 @@ package heb.pay.manage.activemq;
 import heb.pay.entity.MerchantInfo;
 import heb.pay.manage.quartz.QuartzBean;
 import heb.pay.manage.quartz.QuartzManage;
-import heb.pay.service.PayOpService;
-import heb.pay.service.PayService;
+import heb.pay.service.PayBaseService;
+import heb.pay.service.PayCenterService;
 import heb.pay.util.HttpClientUtil;
 import heb.pay.util.JSONUtils;
 import heb.pay.util.PageUtils;
@@ -28,9 +28,9 @@ public class QueueReciver implements MessageListener{
 	@Autowired
 	private QueueSender queueSender;
 	@Autowired
-	private PayService payService;
+	private PayCenterService payService;
 	@Autowired
-	private PayOpService payOpService;
+	private PayBaseService payOpService;
 	@Autowired
 	private QuartzManage quartzManage;
 
@@ -121,14 +121,5 @@ public class QueueReciver implements MessageListener{
 			return;
 		}
 		
-	}
-	
-	public static void main(String[] args) {
-		Calendar c = Calendar.getInstance();
-		Date now = new Date();
-		c.setTime(now);
-		SimpleDateFormat format = new SimpleDateFormat("s m H d M ? yyyy");
-		String cronExpression = format.format(c.getTime());
-		System.out.println(cronExpression);
 	}
 }

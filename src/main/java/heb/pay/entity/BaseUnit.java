@@ -1,5 +1,7 @@
 package heb.pay.entity;
 
+import org.apache.commons.lang.StringUtils;
+
 public class BaseUnit {
 
 	private int cantonid;

@@ -2,6 +2,8 @@ package heb.pay.manage.quartz;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringUtils;
+
 public class QuartzBean implements Serializable{
 
 	/**
@@ -65,5 +67,7 @@ public class QuartzBean implements Serializable{
 	public void setCronExpression(String cronExpression) {
 		this.cronExpression = cronExpression;
 	}
+	
+	
 
 }

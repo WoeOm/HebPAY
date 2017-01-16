@@ -1,13 +1,9 @@
 package heb.pay.manage.bank.abc;
 
+import heb.pay.controller.PaymentController;
 import heb.pay.util.CheckBankDataUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
-
+import org.apache.log4j.Logger;
 import com.abc.pay.client.CertHelper;
 import com.abc.pay.client.FileUtil;
 import com.abc.pay.client.MerchantPara;
@@ -21,14 +17,11 @@ import com.abc.pay.client.TrxException;
  */
 public class MerchantParaFromDB extends MerchantParaFactory {
 
-    /**
-     * 商户端配置文件资源对象
-     */
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    //商户端配置文件资源对象
     private static MerchantPara paraWeb = null;
-	   
-    /**
-     * 初始旗标
-     */
+    //初始旗标
     private static boolean iIsInitialedWeb = false;
 	
 	public void refreshConfig() throws TrxException {
@@ -37,45 +30,35 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 	
 	public void init(MerchantPara para){
 		try {
-			//##网上支付平台系统配置段 - 生产环境 - 请勿更改 
 			//#网上支付平台通讯方式（http / https）
-			//公网
-			para.setTrustPayConnectMethod("https");
-			//专线
-			para.setTrustPayConnectMethodLine("https");
+			para.setTrustPayConnectMethod("https");//公网
+			para.setTrustPayConnectMethodLine("https");//专线
 
 			//#网上支付平台服务器名
-			//公网
-			para.setTrustPayServerName("pay.abchina.com");
-			//专线
-			para.setTrustPayServerNameLine("pay.abchina.com");
+			para.setTrustPayServerName("pay.abchina.com");//公网
+			para.setTrustPayServerNameLine("pay.abchina.com");//专线
 
 		    //#网上支付平台交易端口
-			//公网
-			para.setTrustPayServerPort("443");
-			//专线
-			para.setTrustPayServerPortLine("443");
+			para.setTrustPayServerPort("443");//公网
+			para.setTrustPayServerPortLine("443");//专线
 
 			//#网上支付平台交易网址
 			para.setTrustPayTrxURL("/ebus/ReceiveMerchantTrxReqServlet");
 			para.setTrustPayTrxIEURL("https://pay.abchina.com/ebus/ReceiveMerchantIERequestServlet");
 						
 			//#页面提交支付请求失败后的转向地址
-			para.setMerchantErrorURL("http://127.0.0.1:8088/ABC/Merchant.html");
+			para.setMerchantErrorURL("payment_defeat.html");
 							
-			//##网上支付平台系统配置段 - 生产环境 - 更改证书存放路径，使其和本地存放路径相匹配（绝对路径）
 			//#网上支付平台证书
 			para.setTrustPayCertFileName(CheckBankDataUtils.getABCCertPath()+"TrustPay.cer");
-
 			//#农行根证书文件
 			para.setTrustStoreFileName(CheckBankDataUtils.getABCCertPath()+"abc.truststore");
-			
 			//#农行根证书文件密码
 			para.setTrustStorePassword("changeit");
 			
 			//设置商户编号。如果是多商户则在iMerchantIDList放置多条记录
 			ArrayList<String> iMerchantIDList = new ArrayList<String>();
-			iMerchantIDList.add("103885019990001");
+			iMerchantIDList.add(PaymentController.merchantPayInfo.getTg_merchant_id());
 			para.setMerchantIDList(iMerchantIDList);           
 			
 			FileUtil util = new FileUtil();
@@ -91,7 +74,7 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			para.setMerchantCertPasswordList(iMerchantPasswordList);
 
 			//#交易日志文件存放目录
-			para.setLogPath(CheckBankDataUtils.getABCCertPath()+"/logs");
+			para.setLogPath(CheckBankDataUtils.getABCCertPath()+"logs");
 			//#证书储存媒体
 			para.setMerchantKeyStoreType("0");
 			
@@ -107,17 +90,11 @@ public class MerchantParaFromDB extends MerchantParaFactory {
 			para.setProxyPort("");
 			//设定连接超时时间
 			para.setTrustPayServerTimeout(""); 
-			//#Sign Server地址（当KeyStoreType=1时，必须设定）
-			//para.setSignServerIP("");
-			//#Sign Server端口（当KeyStoreType=1时，必须设定）
-			//para.setSignServerPort("");
-			//#Sign Server密码（当KeyStoreType=1时，选择设定）
-			//para.setSignServerPassword("");
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} 
-    //iIsInitialed = true;
-    System.out.println("[Trustpay商户端API] - 初始 - 完成====================");   
+		logger.info("##ABC商户端API初始化完成……");   
 	}
 
     /**
@@ -136,24 +113,5 @@ public class MerchantParaFromDB extends MerchantParaFactory {
         	iIsInitialedWeb = true;
         }        
 		return paraWeb;
-	}
-	
-	public byte[] readFile(String filePath){
-		//create file object    
-		File file = new File(filePath);
-		byte fileContent[] = null;
-		try  {          
-			FileInputStream fin = new FileInputStream(file);       
-			fileContent = new byte[(int)file.length()];       
-			fin.read(fileContent);        
- 
-		}    
-		catch(FileNotFoundException e) {      
-			System.out.println("File not found" + e);    
-		}    
-		catch(IOException ioe) {      
-			System.out.println("Exception while reading the file " + ioe);     
-		}
-		return fileContent;
 	}
 }

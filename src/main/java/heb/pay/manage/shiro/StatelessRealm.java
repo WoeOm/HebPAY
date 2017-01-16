@@ -1,9 +1,7 @@
 package heb.pay.manage.shiro;
 
-import heb.pay.service.SecureService;
+import heb.pay.service.SecurityService;
 import heb.pay.util.MD5Util;
-
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -17,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class StatelessRealm extends AuthorizingRealm {
 	
 	@Autowired
-	private SecureService secureService;
+	private SecurityService secureService;
 	
     @Override
     public boolean supports(AuthenticationToken token) {

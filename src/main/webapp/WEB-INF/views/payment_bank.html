@@ -13,6 +13,11 @@
 			<input type="hidden" name="${key}" value="${data[key]}"/>
 		</#list>
 	</#if>
+	<#if type == "CEB">
+		<#list data?keys as key> 
+			<input type="hidden" name="${key}" value="${data[key]}"/>
+		</#list>
+	</#if>
 </form>
 <script type="text/javascript">
 document.getElementById("info").action="${url}";

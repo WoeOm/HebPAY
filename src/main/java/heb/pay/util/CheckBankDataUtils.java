@@ -1,15 +1,18 @@
 package heb.pay.util;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.ipps.common.security.PKCSTool;
-
 import CCBSign.RSASig;
+
+import com.csii.payment.client.core.MerchantSignTool;
+import com.csii.payment.client.entity.SignParameterObject;
+import com.ipps.common.security.PKCSTool;
 
 public class CheckBankDataUtils {
 
@@ -39,7 +42,7 @@ public class CheckBankDataUtils {
 
 	public static String bocEncode(byte[] b) {
 		String path = (CheckBankDataUtils.class.getResource("/").getPath() + "cert/boc/BOC.pfx").substring(1);
-		path = path.replace("%20", " ");
+		path = path.replace("%20", " ").replace("\\", "/");
 		PKCSTool tool = null;
 		String signature = "";
 		try {
@@ -49,6 +52,17 @@ public class CheckBankDataUtils {
 			e.printStackTrace();
 		}
 		return signature;
+	}
+	
+	
+	public static String cebEncode(SignParameterObject signParameterObject) {
+		String sign = "";
+		try {
+			sign = MerchantSignTool.sign(signParameterObject);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return sign;
 	}
 	
 	public static boolean checkBOCData(LinkedHashMap<String, String> map) {
@@ -62,8 +76,7 @@ public class CheckBankDataUtils {
 		originalStr = map.get("merchantNo") +"|"+ map.get("orderNo") +"|"+ map.get("orderSeq") +"|"+ map.get("cardTyp") +"|"+ map.get("payTime") +"|"+ map.get("orderStatus") +"|"+ map.get("payAmount");
 		
 		String path = (CheckBankDataUtils.class.getResource("/").getPath() + "cert/boc/BOC.cer").substring(1);
-		path = path.replace("%20", " ");
-		
+		path = path.replace("%20", " ").replace("\\", "/");
 		PKCSTool tool = null;
 		try {
 			tool = PKCSTool.getVerifier(new FileInputStream(path), null);
@@ -76,8 +89,17 @@ public class CheckBankDataUtils {
 		return false;
 	}
 	
-	public static String getABCCertPath(){
-		return (CheckBankDataUtils.class.getResource("/").getPath() + "cert/abc/").replace("%20", " ").substring(1);
+	public static String getABCCertPath() throws IOException{
+		String property = System.getProperty("file.separator");
+		String path = "";
+		if(property.equals("\\")){
+			path = (CheckBankDataUtils.class.getResource("/").getPath().replace("%20", " ").replace("/", "\\").substring(1))+"cert"+property+"abc"+property;
+		}else if(property.equals("/")){
+			path = (CheckBankDataUtils.class.getResource("/").getPath().replace("%20", " ").replace("\\", "/").substring(1))+"cert"+property+"abc"+property;
+
+		}
+		
+		return path;
 	}
 
 	public static void main(String[] args) {

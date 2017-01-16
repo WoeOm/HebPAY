@@ -1,11 +1,12 @@
 package heb.pay.manage.quartz;
 
 import heb.pay.service.AutoScanService;
-import heb.pay.service.NotifyService;
+import heb.pay.service.PaymentService;
 import heb.pay.util.BankConfigUtils;
 import heb.pay.util.BeanUtils;
 import heb.pay.util.CheckBankDataUtils;
 import heb.pay.util.HttpClientUtil;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,12 +14,17 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
 import com.abc.pay.client.JSON;
 import com.abc.pay.client.ebus.QueryOrderRequest;
+import com.csii.payment.client.entity.RequestParameterObject;
+import com.csii.payment.client.entity.SignParameterObject;
+import com.csii.payment.client.http.HttpUtil;
 
 public class AutoScanOrder {
 	
@@ -30,7 +36,7 @@ public class AutoScanOrder {
 	@Autowired     
 	private QuartzManage quartzManage;
 	@Autowired
-	private NotifyService notifyService;
+	private PaymentService paymentService;
 	@Autowired
 	private AutoScanService autoScanService;
 	
@@ -59,6 +65,8 @@ public class AutoScanOrder {
 			String orderId = paymentOrders.get(i).get("BANK_ORDER_NO").toString();
 			String payWayCode = paymentOrders.get(i).get("PAY_WAY_CODE").toString();
 			String merchantNo = paymentOrders.get(i).get("MERCHANT_NO").toString();//商户编号
+			Date TransDateTime = (Date)paymentOrders.get(i).get("ORDER_TIME");
+			String amt = paymentOrders.get(i).get("ORDER_AMOUT").toString();
 			
 			if(payWayCode.equals("CCB-BANK")){//建行BBC_BANK
 				Map<String, Object> map = new HashMap<String, Object>();
@@ -66,11 +74,11 @@ public class AutoScanOrder {
 				try {
 					String result = HttpClientUtil.doPost("http://localhost:8888/", map, "UTF-8");
 					String status = StringUtils.substringBetween(result, "<ORDER_STATUS>", "</ORDER_STATUS>");
-					if(status != null){
+					if(status != null && !status.equals("")){
 						LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
 						link.put("ORDERID", orderId);
 						link.put("SUCCESS", status);
-						notifyService.notice(link, 1,"ccb");
+						paymentService.notice(link, 1,"ccb");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -90,11 +98,11 @@ public class AutoScanOrder {
 					map.put("signData", signData);
 					String result = HttpClientUtil.doPost(BankConfigUtils.bankConfig.get("BOC-BANK-SCAN"), map, "UTF-8");
 					String status = StringUtils.substringBetween(result, "<tranStauts>", "</tranStauts>");
-					if(result!=null){
+					if(status != null && !status.equals("")){
 						LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
 						link.put("orderNo", orderId);
 						link.put("orderStatus", status);
-						notifyService.notice(link, 1,"boc");
+						paymentService.notice(link, 1,"boc");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -116,11 +124,52 @@ public class AutoScanOrder {
 						link.put("orderNo", orderId);
 						link.put("orderStatus", "0");
 					}
-					notifyService.notice(link, 1,"abc");
+					paymentService.notice(link, 1,"abc");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				
+			}else if(payWayCode.equals("CEB-BANK")){//农行
+				String transName = "IQSR";
+				String merchantId = merchantNo;
+				String originalorderId = orderId;
+				String originalTransDateTime = new SimpleDateFormat("yyyyMMddHHmmss").format(TransDateTime);
+				String originalTransAmt = amt;
+				StringBuilder originalStr = new StringBuilder();
+				originalStr.append("transId="+transName+"~|~");
+				originalStr.append("merchantId="+merchantId+"~|~");
+				originalStr.append("originalorderId="+originalorderId+"~|~");
+				originalStr.append("originalTransDateTime="+originalTransDateTime+"~|~");
+				originalStr.append("originalTransAmt="+originalTransAmt);
+				
+				String plain = originalStr.toString();
+				
+				String questUrl = BankConfigUtils.bankConfig.get("CEB-BANK-SCAN");
+				SignParameterObject signParam = new SignParameterObject();
+				signParam.setMerchantId(merchantId);//商户号
+				signParam.setPlain(plain);//明文
+				signParam.setCharset("GBK");//明文使用的字符集
+				signParam.setType(0);//0-普通报文
+				signParam.setAlgorithm("MD5withRSA");//签名算法
+				
+				LinkedHashMap<String,String> link = new LinkedHashMap<String, String>();
+
+				try {
+					String signature = CheckBankDataUtils.cebEncode(signParam);
+					RequestParameterObject requestParameterObject = new RequestParameterObject();
+					requestParameterObject.setRequestURL(questUrl);
+					requestParameterObject.setRequestData("TransName="+transName+"&Plain="+plain+"&Signature="+signature);
+					requestParameterObject.setRequestCharset("GBK");
+					byte[] result = HttpUtil.sendHost(requestParameterObject);
+					String status = StringUtils.substringBetween(new String(result,"GBK"), "transStatus=", "~|~");
+					if(status != null && !status.equals("")){
+						link.put("orderNo", orderId);
+						link.put("orderStatus", status);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				paymentService.notice(link, 1,"ceb");
 			}
 		}
 	}
